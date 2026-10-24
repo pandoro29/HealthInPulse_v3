@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banner HealthInPulse</title>
+<!--
+  Banner da feira (sáb 24/10/2026): 80 × 120 cm, retrato.
+  PDF:  npm run qr -- URL --pdf   (regera o QR, o texto da URL e o banner.pdf)
+  ou abrir no Chrome → Imprimir → Salvar como PDF, margens "Nenhuma", "Gráficos de plano de fundo" ligado.
+  O QR é o arquivo qr-teste.svg ao lado (gerado por scripts/qr.mjs). A URL escrita fica entre os marcadores qr-url.
+  Cores e fontes do app (frontend/tailwind.config.js): brand #003F7E, accent #00A0DC, Sora + DM Sans.
+  Regra R2 (o visitante nunca ouve doença): nada de nome de doença, órgão, "risco de", categoria de risco ou
+  porcentagem. O banner fala de prevenção: próximo passo, padrão normal, exames preventivos (pelo nome) e metas.
+  Próximo passo em verde / âmbar / laranja, nunca vermelho.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@500&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: 800mm 1200mm; margin: 0; }
+
+  :root {
+    --brand: #003F7E;
+    --brand-900: #002a55;
+    --brand-100: #d4e3f1;
+    --accent: #00A0DC;
+    --accent-soft: #e6f7fd;
+    --ink: #0F172A;
+    --muted: #475569;
+    --line: #cbd5e1;
+    --bg: #F7F9FC;
+    --low: #16a34a;     --low-soft: #dcfce7;
+    --mod: #b45309;     --mod-soft: #fef3c7;
+    --high: #c2410c;    --high-soft: #ffedd5;
+    --display: "Sora", "Segoe UI", system-ui, sans-serif;
+    --body: "DM Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); }
+  body { font-family: var(--body); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .page {
+    width: 800mm; height: 1200mm; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--bg);
+  }
+
+  /* ─── Topo ───────────────────────────────────────────── */
+  .top {
+    background: var(--brand); color: #fff;
+    padding: 46mm 50mm 50mm;
+    position: relative;
+  }
+  .brand { display: flex; align-items: center; gap: 12mm; }
+  .brand svg { width: 34mm; height: 34mm; flex: none; }
+  .brand-name { font: 700 66pt/1 var(--display); letter-spacing: -0.01em; }
+  .brand-tag {
+    margin-left: auto; font: 500 25pt/1.2 var(--mono); color: var(--brand-100);
+    letter-spacing: .06em; text-transform: uppercase; text-align: right;
+  }
+  h1 {
+    font: 700 150pt/1.02 var(--display); letter-spacing: -0.02em;
+    margin-top: 40mm; max-width: 700mm;
+  }
+  h1 em { font-style: normal; color: #7fd6f5; }
+  .lede {
+    font: 400 50pt/1.28 var(--body); color: #e6eef7;
+    margin-top: 18mm; max-width: 690mm;
+  }
+  .pulse-line { position: absolute; left: 0; right: 0; bottom: -1px; height: 26mm; width: 100%; display: block; }
+
+  /* ─── QR ─────────────────────────────────────────────── */
+  .qr-zone { padding: 30mm 50mm 0; }
+  .qr-card {
+    background: #fff; border: 1.2mm solid var(--brand-100); border-radius: 14mm;
+    padding: 22mm; display: grid; grid-template-columns: 360mm 1fr; gap: 22mm; align-items: center;
+  }
+  .qr-card img { width: 360mm; height: 360mm; display: block; }
+  .qr-text h2 { font: 700 112pt/1 var(--display); color: var(--brand); letter-spacing: -0.015em; }
+  .qr-text .cam { font: 500 44pt/1.25 var(--body); color: var(--muted); margin-top: 8mm; }
+  .qr-text ul { list-style: none; margin-top: 16mm; display: grid; gap: 9mm; }
+  .qr-text li { font: 700 54pt/1.1 var(--body); display: flex; align-items: center; gap: 7mm; }
+  .qr-text li::before {
+    content: ""; flex: none; width: 16mm; height: 16mm; border-radius: 50%;
+    background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 70% no-repeat;
+  }
+  .url {
+    margin-top: 18mm; font: 500 28pt/1.3 var(--mono); color: var(--brand);
+    background: var(--accent-soft); border-radius: 5mm; padding: 4mm 6mm; display: inline-block;
+    overflow-wrap: anywhere;
+  }
+
+  /* ─── Como funciona ──────────────────────────────────── */
+  .how { padding: 26mm 50mm 0; }
+  .eyebrow { font: 500 26pt/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--brand); }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14mm; margin-top: 12mm; }
+  .step { background: #fff; border: .8mm solid var(--line); border-radius: 10mm; padding: 13mm 13mm 14mm; }
+  .step .n {
+    width: 20mm; height: 20mm; border-radius: 50%; background: var(--brand); color: #fff;
+    font: 700 34pt/20mm var(--display); text-align: center;
+  }
+  .step h3 { font: 700 44pt/1.1 var(--display); color: var(--ink); margin-top: 9mm; letter-spacing: -0.01em; }
+  .step p { font: 400 30pt/1.3 var(--body); color: var(--muted); margin-top: 6mm; }
+  .step p b { color: var(--ink); font-weight: 700; }
+
+  /* ─── Próximo passo e exames preventivos ─────────────── */
+  .next { padding: 18mm 50mm 0; }
+  .levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14mm; margin-top: 10mm; }
+  .lvl { border-radius: 10mm; padding: 10mm 12mm; }
+  .lvl b { display: block; font: 700 36pt/1 var(--mono); letter-spacing: .06em; }
+  .lvl span { display: block; font: 500 28pt/1.25 var(--body); color: var(--ink); margin-top: 5mm; }
+  .lvl.low  { background: var(--low-soft);  } .lvl.low b  { color: var(--low); }
+  .lvl.mod  { background: var(--mod-soft);  } .lvl.mod b  { color: var(--mod); }
+  .lvl.high { background: var(--high-soft); } .lvl.high b { color: var(--high); }
+
+  .exams { padding: 16mm 50mm 0; display: flex; flex-wrap: wrap; align-items: center; gap: 7mm; }
+  .exams .lab { font: 500 30pt/1 var(--body); color: var(--muted); margin-right: 4mm; }
+  .chip {
+    font: 700 32pt/1 var(--body); color: var(--brand);
+    border: .8mm solid var(--brand-100); background: #fff; border-radius: 99mm; padding: 6mm 11mm;
+  }
+
+  /* ─── Rodapé ─────────────────────────────────────────── */
+  .foot { margin-top: auto; padding: 0 50mm 40mm; }
+  .warn {
+    font: 700 40pt/1.2 var(--display); color: var(--brand-900);
+    border-top: .8mm solid var(--line); padding-top: 14mm;
+  }
+  .warn span { font-family: var(--body); font-weight: 400; color: var(--muted); }
+  .sources { font: 400 25pt/1.4 var(--body); color: var(--muted); margin-top: 9mm; }
+  .sources b { color: var(--ink); font-weight: 700; }
+</style>
+</head>
+<body>
+<main class="page">
+
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <rect width="48" height="48" rx="12" fill="#00A0DC"/>
+        <path d="M6 26h9l4-10 6 18 4-12 3 4h10" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="brand-name">HealthInPulse</span>
+      <span class="brand-tag">FIAP × Care Plus<br>projeto acadêmico</span>
+    </div>
+
+    <h1>Como <em>manter</em><br>a saúde em dia?</h1>
+    <p class="lede">Um app de prevenção que compara suas respostas com os padrões normais da medicina, mostra o
+      próximo passo e os exames preventivos que cabem na sua idade.</p>
+
+    <svg class="pulse-line" viewBox="0 0 800 26" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 26V18h300l10-12 12 20 12-26 12 18 8-8h436v34z" fill="#F7F9FC"/>
+    </svg>
+  </header>
+
+  <section class="qr-zone">
+    <div class="qr-card">
+      <img src="qr-teste.svg" alt="QR code para o teste rápido">
+      <div class="qr-text">
+        <h2>Faça o teste</h2>
+        <p class="cam">Aponte a câmera do celular para o código.</p>
+        <ul>
+          <li>3 minutos, 8 estações</li>
+          <li>sem cadastro</li>
+          <li>nada é gravado</li>
+        </ul>
+        <p class="url"><!--qr-url-->healthinpulse.onrender.com/teste<!--/qr-url--></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="how">
+    <p class="eyebrow">Como funciona</p>
+    <div class="steps">
+      <div class="step">
+        <div class="n">1</div>
+        <h3>Você percorre a trilha</h3>
+        <p>Corpo, hábitos, sono, ânimo e sinais do dia a dia. <b>Uma pergunta</b> por tela, um selo por estação.</p>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <h3>Compara com o normal</h3>
+        <p>Faixas normais do <b>Guyton &amp; Hall</b> e de diretrizes oficiais.</p>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <h3>Monta o seu placar</h3>
+        <p>O que você já faz bem, <b>missões</b> para subir o placar e os exames da sua idade.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="next" aria-label="Próximo passo">
+    <p class="eyebrow">Seu próximo passo</p>
+    <div class="levels">
+      <div class="lvl low"><b>MANTER A ROTINA</b><span>dentro do padrão normal</span></div>
+      <div class="lvl mod"><b>AGENDAR CONSULTA</b><span>algo fora do padrão normal</span></div>
+      <div class="lvl high"><b>ATENDIMENTO AGORA</b><span>sinal de alerta: SAMU 192 · CVV 188</span></div>
+    </div>
+  </section>
+
+  <section class="exams" aria-label="Exemplos de exames preventivos">
+    <span class="lab">Exames preventivos, conforme idade e sexo:</span>
+    <span class="chip">mamografia</span>
+    <span class="chip">sangue oculto nas fezes</span>
+    <span class="chip">papanicolau / DNA-HPV</span>
+  </section>
+
+  <footer class="foot">
+    <p class="warn">Não é diagnóstico. <span>Compara com o padrão normal e ajuda a manter a saúde em dia até a
+      consulta. Não substitui consulta nem exame.</span></p>
+    <p class="sources"><b>Fontes:</b> Guyton &amp; Hall, Tratado de Fisiologia Médica (faixas normais) · Organização
+      Mundial da Saúde · Ministério da Saúde e INCA (exames preventivos) · NICE · SBC · SBD. Toda informação tem fonte
+      documentada. Pacientes da demonstração são fictícios.</p>
+  </footer>
+
+</main>
+</body>
+</html>

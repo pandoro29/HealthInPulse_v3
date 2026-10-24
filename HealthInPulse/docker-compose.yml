@@ -1,0 +1,24 @@
+# Sobe a demo completa num container só, sem instalar Node na máquina:
+#
+#   docker compose up --build      → http://localhost:3000
+#
+# Para desenvolver (hot reload), use `npm run setup` + `npm run dev`.
+
+services:
+  app:
+    build: .
+    image: healthinpulse:local
+    container_name: healthinpulse
+    restart: unless-stopped
+    ports:
+      # Só esta máquina. As senhas da demo são públicas: na rede da faculdade,
+      # 3000:3000 deixaria qualquer um entrar como a médica.
+      - '127.0.0.1:3000:3000'
+    environment:
+      CLIENT_URL: http://localhost:3000
+      # OPENAI_API_KEY: sk-... # opcional; vazio = simulador local de IA
+    volumes:
+      - data:/data             # banco SQLite persiste entre restarts
+
+volumes:
+  data:

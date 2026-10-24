@@ -1,0 +1,1062 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Plano HealthInPulse v8</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Sora:wght@600;700&display=swap">
+<style>
+/* Layout: coluna de leitura de 68ch num contêiner de 1040px; diagramas na largura toda;
+   notas de engenharia em "papel de projeto" quadriculado, sempre no mesmo formato. */
+:root {
+  --bg: #F3F7FB;
+  --surface: #FFFFFF;
+  --surface-2: #E8F0F7;
+  --grid: #E3ECF5;
+  --ink: #0D2137;
+  --muted: #4E6277;
+  --line: #D2DDE8;
+  --line-strong: #94A9BE;
+  --brand: #003F7E;
+  --accent: #0089BF;
+  --accent-soft: #DDF1FA;
+  --ok: #1B7A52;
+  --ok-soft: #DCF2E7;
+  --warn: #8F5E12;
+  --warn-soft: #FAEDD5;
+  --alert: #B9500A;
+  --alert-soft: #FCE5D4;
+  --display: "Sora", "Segoe UI", system-ui, sans-serif;
+  --body: "DM Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0A1522; --surface: #0F2135; --surface-2: #163049; --grid: #142A40;
+    --ink: #E1EAF3; --muted: #9DB1C5; --line: #223950; --line-strong: #46627F;
+    --brand: #8DBBEE; --accent: #3CC3F2; --accent-soft: #0E3347;
+    --ok: #55C796; --ok-soft: #113A2A; --warn: #E3B457; --warn-soft: #3A2C10;
+    --alert: #F3955C; --alert-soft: #44240E;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0A1522; --surface: #0F2135; --surface-2: #163049; --grid: #142A40;
+  --ink: #E1EAF3; --muted: #9DB1C5; --line: #223950; --line-strong: #46627F;
+  --brand: #8DBBEE; --accent: #3CC3F2; --accent-soft: #0E3347;
+  --ok: #55C796; --ok-soft: #113A2A; --warn: #E3B457; --warn-soft: #3A2C10;
+  --alert: #F3955C; --alert-soft: #44240E;
+  color-scheme: dark;
+}
+
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.62 var(--body); }
+.wrap {
+  max-width: 1040px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+a { color: var(--brand); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+p { margin: 0 0 .9em; }
+strong { font-weight: 700; }
+code, .mono { font-family: var(--mono); font-size: .88em; }
+code { background: var(--surface-2); padding: 1px 6px; border-radius: 5px; }
+
+.eyebrow { font: 500 12px/1.2 var(--mono); letter-spacing: .09em; text-transform: uppercase; color: var(--brand); margin: 0; }
+h1, h2, h3, h4 { font-family: var(--display); text-wrap: balance; color: var(--ink); }
+h1 { font-weight: 700; font-size: clamp(1.85rem, 1.1rem + 3vw, 2.9rem); line-height: 1.12; letter-spacing: -.012em; margin: .45em 0 .45em; max-width: 22ch; }
+h2 { font-weight: 600; font-size: clamp(1.4rem, 1.1rem + 1.2vw, 1.85rem); line-height: 1.2; margin: .3em 0 .7em; }
+h3 { font-weight: 600; font-size: 1.08rem; line-height: 1.3; margin: 0 0 .45em; }
+h4 { font-weight: 600; font-size: 1.02rem; line-height: 1.3; margin: .25em 0 .5em; }
+.prose { max-width: 68ch; }
+.lede { font-size: 1.12rem; color: var(--muted); max-width: 62ch; }
+.muted { color: var(--muted); }
+
+/* topo */
+.hero { padding-block: 40px 28px; }
+.pulse { display: block; width: 100%; max-width: 420px; height: 34px; color: var(--accent); }
+.status { display: inline-flex; align-items: center; gap: 8px; font: 500 12px/1 var(--mono); color: var(--warn); background: var(--warn-soft); padding: 7px 12px; border-radius: 999px; margin-top: 4px; }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--warn); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 28px; }
+.fact { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.fact span { font: 500 11px/1.3 var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.fact strong { font-family: var(--display); font-weight: 600; font-size: 1.12rem; line-height: 1.25; }
+.toc { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.toc a { font: 500 12.5px/1 var(--mono); color: var(--ink); text-decoration: none; border: 1px solid var(--line); background: var(--surface); padding: 8px 12px; border-radius: 999px; }
+.toc a:hover { background: var(--surface-2); }
+
+/* seções */
+section { padding-block: 44px; border-top: 1px solid var(--line); scroll-margin-top: 12px; }
+
+/* cartões */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 18px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; min-width: 0; display: flex; flex-direction: column; }
+.card p:last-child { margin-bottom: 0; }
+.card .kicker { font: 500 11.5px/1.3 var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--brand); margin: 0 0 6px; }
+.limits { margin-top: 18px; background: var(--surface-2); border-radius: 12px; padding: 16px 20px; max-width: 76ch; }
+.limits p:last-child { margin: 0; }
+
+/* nota de engenharia (papel quadriculado) */
+.se {
+  margin-block: 30px 6px; max-width: 78ch;
+  border: 1px dashed var(--line-strong); border-radius: 12px; padding: 18px 22px;
+  background-color: var(--surface);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.se-tag { font: 500 11px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--brand); margin: 0; display: flex; align-items: center; gap: 8px; }
+.se-tag::before { content: ""; width: 14px; height: 14px; border: 1.5px solid var(--brand); border-radius: 3px; transform: rotate(45deg) scale(.7); }
+.se p:last-child { margin-bottom: 0; }
+.se .here { font-size: .95rem; color: var(--muted); }
+.se .here strong { color: var(--ink); }
+
+/* figuras */
+figure.fig { margin: 26px 0 8px; }
+.fig-scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+.fig-scroll svg { display: block; width: 100%; height: auto; min-width: 760px; }
+.fig-scroll svg.narrow { min-width: 620px; }
+figcaption { font-size: .92rem; color: var(--muted); margin-top: 10px; max-width: 78ch; }
+
+/* SVG */
+.d-box { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.2; }
+.d-box.hl { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+.d-box.soft { fill: var(--surface-2); stroke: none; }
+.d-t { font: 600 14px var(--body); fill: var(--ink); }
+.d-s { font: 400 11.5px var(--body); fill: var(--muted); }
+.d-tag { font: 500 10.5px var(--mono); fill: var(--brand); }
+.d-lab { font: 500 10.5px var(--mono); fill: var(--muted); }
+.d-lane { font: 500 11px var(--mono); fill: var(--brand); letter-spacing: .08em; }
+.d-ar { stroke: var(--muted); stroke-width: 1.4; fill: none; }
+.d-ar.alert { stroke: var(--alert); stroke-dasharray: 5 4; }
+.d-ar.dash { stroke-dasharray: 5 4; }
+.d-head { fill: var(--muted); }
+.d-head.alert { fill: var(--alert); }
+.d-lab.alert { fill: var(--alert); }
+.d-grid { stroke: var(--line); stroke-width: 1; }
+.d-bar { fill: var(--accent); }
+.d-bar.done { fill: var(--brand); }
+.d-col { fill: var(--surface-2); }
+.d-col.feira { fill: var(--alert-soft); }
+.d-ms { fill: var(--alert); }
+.d-ms-line { stroke: var(--alert); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.d-ms-lab { font: 500 10.5px var(--mono); fill: var(--alert); }
+.d-day { font: 500 11px var(--mono); fill: var(--muted); }
+.d-row { font: 400 12px var(--body); fill: var(--ink); }
+.d-layer { fill: var(--surface-2); stroke: var(--line-strong); stroke-width: 1.2; }
+.d-layer.hl { fill: var(--accent-soft); stroke: var(--accent); }
+.d-note { font: 400 12px var(--body); fill: var(--ink); }
+
+/* simulador */
+.sim { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 26px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; margin-top: 22px; }
+@media (max-width: 780px) { .sim { grid-template-columns: minmax(0, 1fr); } }
+.sim-who { font: 500 12px/1.4 var(--mono); color: var(--brand); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 14px; }
+.seg-label { font-weight: 700; font-size: .95rem; margin: 0 0 8px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.seg button { font: 500 13.5px/1.2 var(--body); color: var(--ink); background: var(--surface-2); border: 1px solid transparent; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.seg button .x { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-left: 4px; }
+.chk { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 11px 0; border-top: 1px solid var(--line); cursor: pointer; font-size: .96rem; line-height: 1.4; }
+.chk input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); }
+.chk small { display: block; color: var(--muted); font-size: .84rem; }
+.mult { font: 500 12px/1 var(--mono); background: var(--surface-2); color: var(--ink); padding: 5px 8px; border-radius: 6px; white-space: nowrap; }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.step-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: .92rem; }
+.step-head span:first-child { min-width: 0; }
+.step-head b { font: 500 12.5px var(--mono); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.step-head .f { font: 500 11.5px var(--mono); color: var(--muted); margin-right: 6px; }
+.track { position: relative; height: 10px; background: var(--surface-2); border-radius: 5px; margin-top: 5px; }
+.fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; background: var(--accent); }
+.step.final .fill { background: var(--brand); }
+.mk { position: absolute; top: -4px; bottom: -4px; width: 0; border-left: 2px dashed var(--warn); }
+.mk.alert { border-left-color: var(--alert); }
+.axis { position: relative; height: 18px; margin-top: 4px; font: 500 10.5px var(--mono); color: var(--muted); }
+.axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.axis span:first-child { transform: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font: 500 11px var(--mono); color: var(--muted); margin-top: 8px; }
+.legend i { display: inline-block; width: 0; height: 12px; border-left: 2px dashed var(--warn); margin-right: 6px; vertical-align: -2px; }
+.legend i.alert { border-left-color: var(--alert); }
+.verdict { margin-top: 18px; border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; }
+.verdict .lvl { font: 700 13px/1.2 var(--mono); letter-spacing: .08em; }
+.verdict p { margin: 0; font-size: .95rem; }
+.l-rotina { background: var(--ok-soft); color: var(--ok); }
+.l-atencao { background: var(--warn-soft); color: var(--warn); }
+.l-investigar { background: var(--alert-soft); color: var(--alert); }
+.verdict p { color: var(--ink); }
+.sim-note { font-size: .85rem; color: var(--muted); margin: 14px 0 0; }
+
+/* passos da IA */
+.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin: 18px 0 0; padding: 0; list-style: none; counter-reset: how; }
+.how li { counter-increment: how; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; min-width: 0; }
+.how li::before { content: "Passo " counter(how); display: block; font: 500 11.5px/1 var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--brand); margin-bottom: 8px; }
+.how p:last-child { margin: 0; }
+.thresholds { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.pill { font: 700 11.5px/1 var(--mono); letter-spacing: .06em; padding: 6px 10px; border-radius: 999px; }
+
+/* casos */
+.case .who { font-family: var(--display); font-weight: 600; font-size: 1.1rem; margin: 0; }
+.case .age { color: var(--muted); font-size: .9rem; margin: 0 0 12px; }
+.case dl { margin: 0; display: grid; gap: 10px; }
+.case dt { font: 500 11px/1.2 var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.case dd { margin: 2px 0 0; }
+.case .pill { display: inline-block; margin-bottom: 12px; align-self: flex-start; }
+
+/* tabelas */
+.table-wrap { overflow-x: auto; margin-top: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+table { width: 100%; border-collapse: collapse; min-width: 640px; }
+th, td { text-align: left; vertical-align: top; padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: .94rem; }
+th { font: 500 11.5px/1.3 var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 700; }
+
+/* prioridades */
+.moscow { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 18px; }
+.moscow .card ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: .94rem; }
+.moscow .card h3 { display: flex; align-items: center; gap: 8px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.cut { margin: 14px 0 0; padding-left: 22px; display: grid; gap: 6px; max-width: 70ch; }
+
+/* tarefas do grupo */
+.todo { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 10px; max-width: 80ch; }
+.todo li { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 14px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.todo .when { font: 500 12px/1.35 var(--mono); color: var(--brand); }
+.todo p { margin: 0; }
+.todo .who { font-weight: 700; }
+@media (max-width: 520px) { .todo li { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+
+/* glossário */
+.gloss { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 28px; margin: 18px 0 0; }
+.gloss div { padding: 12px 0; border-top: 1px solid var(--line); min-width: 0; }
+.gloss dt { font-weight: 700; }
+.gloss dd { margin: 2px 0 0; color: var(--muted); font-size: .94rem; }
+
+footer { padding-block: 32px 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .fill { transition: width .35s ease; }
+}
+</style>
+</head>
+<body>
+
+<header class="wrap hero">
+  <p class="eyebrow">Plano · HealthInPulse v8 · FIAP × Care Plus</p>
+  <h1>Em 8 dias, o HealthInPulse vai estimar risco de câncer e mostrar o porquê</h1>
+  <svg class="pulse" viewBox="0 0 420 34" aria-hidden="true"><polyline points="0,20 120,20 134,20 142,6 152,30 160,12 168,20 260,20 272,20 280,8 290,28 298,14 306,20 420,20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+  <p class="lede">Este é o plano do que vai ser feito até a feira, explicado sem código. Ao longo da página, as notas quadriculadas mostram qual prática de engenharia de software está por trás de cada decisão.</p>
+  <span class="status">Aguardando aprovação do Igor · a implementação começa depois do ok</span>
+  <div class="facts">
+    <div class="fact"><span>Apresentação</span><strong>Sábado, 24/10, no stand</strong></div>
+    <div class="fact"><span>O que a IA avalia</span><strong>5 cânceres + 8 doenças crônicas</strong></div>
+    <div class="fact"><span>De onde vêm os números</span><strong>Literatura médica, com fonte</strong></div>
+    <div class="fact"><span>Onde roda</span><strong>Notebook sem internet + site com QR</strong></div>
+  </div>
+  <nav class="toc" aria-label="Seções">
+    <a href="#problema">Problema</a><a href="#proposta">Proposta</a><a href="#stand">No stand</a><a href="#ia">Como a IA pensa</a><a href="#base">Base no banco</a><a href="#sistema">Por dentro</a><a href="#casos">Casos da demo</a><a href="#cronograma">Cronograma</a><a href="#qualidade">Qualidade</a><a href="#prioridades">Prioridades</a><a href="#riscos">Riscos</a><a href="#grupo">Tarefas do grupo</a><a href="#conceitos">Conceitos</a><a href="#glossario">Glossário</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section id="problema">
+    <p class="eyebrow">O problema</p>
+    <h2>Câncer descoberto cedo tem outro desfecho, mas pouca gente sabe quando se examinar</h2>
+    <div class="prose">
+      <p>O INCA estima cerca de 704 mil casos novos de câncer por ano no Brasil entre 2023 e 2025. Muitos são encontrados tarde, quando o tratamento é mais difícil. Existem exames de rastreamento que acham a doença cedo, mas cada um tem idade e público certos, e a maioria das pessoas não sabe qual é o seu.</p>
+      <p>Hoje o HealthInPulse já acompanha 8 doenças crônicas com a pulseira Care Plus e uma triagem inteligente. Faltam três coisas:</p>
+      <ul>
+        <li>ele não fala de câncer;</li>
+        <li>os números que a IA usa estão escondidos dentro do código, sem fonte;</li>
+        <li>a tela mostra pouco do raciocínio, então ninguém entende por que deu aquele resultado.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="proposta">
+    <p class="eyebrow">A proposta</p>
+    <h2>Três promessas para a feira</h2>
+    <div class="cards">
+      <article class="card">
+        <p class="kicker">Estima o risco</p>
+        <p>Para 5 cânceres frequentes no Brasil (mama, próstata, colorretal, pulmão e colo do útero) e para as 8 doenças crônicas que o app já acompanha. Junta respostas, exames e dados da pulseira e da balança.</p>
+      </article>
+      <article class="card">
+        <p class="kicker">Explica o porquê</p>
+        <p>Cada risco vem com a lista do que pesou a favor e contra, e de onde veio cada número: INCA, NICE (Reino Unido) e sociedades médicas brasileiras.</p>
+      </article>
+      <article class="card">
+        <p class="kicker">Indica o próximo passo</p>
+        <p>Qual exame de rastreamento fazer e a partir de quando, para a sua idade e sexo. Se a chance estimada passar do limite, recomenda procurar um médico.</p>
+      </article>
+    </div>
+    <div class="limits">
+      <p><strong>O que ele não faz:</strong> não dá diagnóstico, não substitui o médico e não guarda nenhum dado de quem faz o teste no stand. Toda tela de resultado diz isso com clareza.</p>
+    </div>
+  </section>
+
+  <section id="stand">
+    <p class="eyebrow">No stand</p>
+    <h2>Dois jeitos de usar: o visitante testa, o grupo demonstra</h2>
+    <p class="prose">O visitante faz um teste rápido no notebook ou no próprio celular, pelo QR code. Enquanto isso, o grupo mostra a versão completa, com login de paciente e de médica, para quem quiser entender a fundo.</p>
+    <figure class="fig">
+      <div class="fig-scroll">
+        <svg viewBox="0 0 980 360" role="img" aria-label="Fluxo do visitante: capa, perfil, perguntas que se repetem até a IA ter certeza suficiente, resultado e próximo passo, voltando para um novo teste. Fluxo da demonstração do grupo: login da médica, painel, paciente Roberto em investigar, explicação e Base da IA, onde mudar um número altera o resultado do Roberto.">
+          <defs>
+            <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker>
+          </defs>
+          <text class="d-lane" x="20" y="24">VISITANTE · 2 A 3 MIN</text>
+          <rect class="d-box" x="20" y="56" width="152" height="80" rx="10"/>
+          <text class="d-t" x="96" y="84" text-anchor="middle">Capa</text>
+          <text class="d-s" x="96" y="106" text-anchor="middle">o que é o teste</text>
+          <text class="d-s" x="96" y="122" text-anchor="middle">não é diagnóstico</text>
+          <rect class="d-box" x="214" y="56" width="152" height="80" rx="10"/>
+          <text class="d-t" x="290" y="84" text-anchor="middle">Perfil</text>
+          <text class="d-s" x="290" y="106" text-anchor="middle">idade, sexo, peso</text>
+          <text class="d-s" x="290" y="122" text-anchor="middle">hábitos e família</text>
+          <rect class="d-box" x="408" y="56" width="152" height="80" rx="10"/>
+          <text class="d-t" x="484" y="84" text-anchor="middle">Perguntas</text>
+          <text class="d-s" x="484" y="106" text-anchor="middle">6 a 8, uma por tela</text>
+          <text class="d-s" x="484" y="122" text-anchor="middle">escolhidas pela IA</text>
+          <rect class="d-box hl" x="602" y="56" width="152" height="80" rx="10"/>
+          <text class="d-t" x="678" y="84" text-anchor="middle">Resultado</text>
+          <text class="d-s" x="678" y="106" text-anchor="middle">risco e o porquê</text>
+          <text class="d-s" x="678" y="122" text-anchor="middle">exame indicado</text>
+          <rect class="d-box" x="796" y="56" width="152" height="80" rx="10"/>
+          <text class="d-t" x="872" y="84" text-anchor="middle">Próximo passo</text>
+          <text class="d-s" x="872" y="106" text-anchor="middle">QR para o celular</text>
+          <text class="d-s" x="872" y="122" text-anchor="middle">ou novo teste</text>
+          <line class="d-ar" x1="174" y1="96" x2="211" y2="96" marker-end="url(#a1)"/>
+          <line class="d-ar" x1="368" y1="96" x2="405" y2="96" marker-end="url(#a1)"/>
+          <line class="d-ar" x1="562" y1="96" x2="599" y2="96" marker-end="url(#a1)"/>
+          <line class="d-ar" x1="756" y1="96" x2="793" y2="96" marker-end="url(#a1)"/>
+          <path class="d-ar" d="M 452 56 C 452 26, 516 26, 516 53" marker-end="url(#a1)"/>
+          <text class="d-lab" x="484" y="22" text-anchor="middle">repete até ter certeza</text>
+          <path class="d-ar dash" d="M 872 136 V 160 H 96 V 139" marker-end="url(#a1)"/>
+          <text class="d-lab" x="484" y="178" text-anchor="middle">novo teste · no modo quiosque a tela volta sozinha após 2 min</text>
+
+          <text class="d-lane" x="20" y="216">GRUPO DEMONSTRANDO · 5 MIN</text>
+          <rect class="d-box" x="20" y="232" width="152" height="80" rx="10"/>
+          <text class="d-t" x="96" y="260" text-anchor="middle">Login da médica</text>
+          <text class="d-s" x="96" y="282" text-anchor="middle">Dra. Ana</text>
+          <text class="d-s" x="96" y="298" text-anchor="middle">um clique no card</text>
+          <rect class="d-box" x="214" y="232" width="152" height="80" rx="10"/>
+          <text class="d-t" x="290" y="260" text-anchor="middle">Painel</text>
+          <text class="d-s" x="290" y="282" text-anchor="middle">pacientes em alerta</text>
+          <text class="d-s" x="290" y="298" text-anchor="middle">chegam em tempo real</text>
+          <rect class="d-box hl" x="408" y="232" width="152" height="80" rx="10"/>
+          <text class="d-t" x="484" y="260" text-anchor="middle">Roberto</text>
+          <text class="d-s" x="484" y="282" text-anchor="middle">câncer colorretal:</text>
+          <text class="d-s" x="484" y="298" text-anchor="middle">INVESTIGAR</text>
+          <rect class="d-box" x="602" y="232" width="152" height="80" rx="10"/>
+          <text class="d-t" x="678" y="260" text-anchor="middle">Por quê?</text>
+          <text class="d-s" x="678" y="282" text-anchor="middle">fator a fator</text>
+          <text class="d-s" x="678" y="298" text-anchor="middle">com a fonte de cada um</text>
+          <rect class="d-box" x="796" y="232" width="152" height="80" rx="10"/>
+          <text class="d-t" x="872" y="260" text-anchor="middle">Base da IA</text>
+          <text class="d-s" x="872" y="282" text-anchor="middle">muda um número</text>
+          <text class="d-s" x="872" y="298" text-anchor="middle">na frente da banca</text>
+          <line class="d-ar" x1="174" y1="272" x2="211" y2="272" marker-end="url(#a1)"/>
+          <line class="d-ar" x1="368" y1="272" x2="405" y2="272" marker-end="url(#a1)"/>
+          <line class="d-ar" x1="562" y1="272" x2="599" y2="272" marker-end="url(#a1)"/>
+          <line class="d-ar" x1="756" y1="272" x2="793" y2="272" marker-end="url(#a1)"/>
+          <path class="d-ar dash" d="M 872 312 V 334 H 484 V 315" marker-end="url(#a1)"/>
+          <text class="d-lab" x="678" y="352" text-anchor="middle">o resultado do Roberto muda na hora</text>
+        </svg>
+      </div>
+      <figcaption>Em cima, o caminho do visitante: a etapa de perguntas se repete até a IA ter informação suficiente. Embaixo, o roteiro do grupo: o ponto alto é mudar um número na Base da IA e ver o resultado do Roberto mudar.</figcaption>
+    </figure>
+    <aside class="se">
+      <p class="se-tag">Engenharia de software</p>
+      <h4>Requisitos começam pelo usuário</h4>
+      <p>Antes de decidir telas ou tecnologia, descrevemos quem usa e o que precisa fazer: o visitante tem 2 minutos e nenhuma paciência para login; a banca quer entender como a IA decide. Isso vira requisito: teste sem cadastro, uma pergunta por tela e resultado explicado.</p>
+      <p class="here"><strong>No plano:</strong> as duas jornadas acima guiam tudo o que entra e o que fica de fora.</p>
+    </aside>
+  </section>
+
+  <section id="ia">
+    <p class="eyebrow">Como a IA pensa</p>
+    <h2>Um detetive que começa pela média e ajusta a cada pista</h2>
+    <div class="prose">
+      <p>A IA do HealthInPulse usa raciocínio probabilístico, a mesma lógica que um médico usa sem perceber. O nome técnico é <em>raciocínio bayesiano</em>. Funciona em três passos:</p>
+    </div>
+    <ol class="how">
+      <li>
+        <h3>Começa pela média</h3>
+        <p>Qual é a chance de alguém com o mesmo perfil, como idade e sexo, receber esse diagnóstico nos próximos 2 anos? O número vem das estatísticas de incidência do INCA.</p>
+      </li>
+      <li>
+        <h3>Cada pista multiplica ou divide</h3>
+        <p>Um exame alterado, um sintoma ou um dado da pulseira muda a chance. Cada pista tem uma força medida em estudos: "×12" pesa muito, "÷4" diminui.</p>
+      </li>
+      <li>
+        <h3>Compara com limites</h3>
+        <p>O resultado é comparado com limites claros. O de 3% vem da diretriz do NICE, órgão de saúde do Reino Unido, para quando investigar.</p>
+        <div class="thresholds">
+          <span class="pill l-rotina">ROTINA &lt; 1%</span>
+          <span class="pill l-atencao">ATENÇÃO 1–3%</span>
+          <span class="pill l-investigar">INVESTIGAR ≥ 3%</span>
+        </div>
+      </li>
+    </ol>
+    <p class="prose" style="margin-top:18px">E qual pergunta fazer em seguida? Como no jogo Cara a Cara, a melhor pergunta é a que mais separa as possibilidades. A IA calcula isso a cada resposta, por isso o teste é curto.</p>
+
+    <h3 style="margin-top:26px">Experimente: o caso do Roberto</h3>
+    <p class="prose muted">Ligue e desligue as pistas e veja a chance mudar. A escala é logarítmica: cada marca vale cerca de 3 vezes a anterior.</p>
+    <div class="sim" id="sim">
+      <div>
+        <p class="sim-who">Roberto, 63 anos, homem · câncer colorretal</p>
+        <p class="seg-label" id="fit-label">Exame de sangue oculto nas fezes (FIT)</p>
+        <div class="seg" role="group" aria-labelledby="fit-label">
+          <button type="button" id="fit-none" data-fit="none" aria-pressed="false">Não fez</button>
+          <button type="button" id="fit-pos" data-fit="pos" aria-pressed="true">Positivo <span class="x">×12</span></button>
+          <button type="button" id="fit-neg" data-fit="neg" aria-pressed="false">Negativo <span class="x">÷4</span></button>
+        </div>
+        <label class="chk" for="c-anemia"><input type="checkbox" id="c-anemia" checked><span>Anemia por falta de ferro<small>exame de sangue (hemograma)</small></span><span class="mult">×3</span></label>
+        <label class="chk" for="c-peso"><input type="checkbox" id="c-peso" checked><span>Perdeu 9% do peso em 3 meses<small>medido pela balança Care Plus</small></span><span class="mult">×1,5</span></label>
+        <label class="chk" for="c-sang"><input type="checkbox" id="c-sang"><span>Percebeu sangue nas fezes<small>resposta na triagem</small></span><span class="mult">×4</span></label>
+        <label class="chk" for="c-fam"><input type="checkbox" id="c-fam"><span>Pai, mãe ou irmão teve esse câncer<small>fator de risco da família</small></span><span class="mult">×2</span></label>
+      </div>
+      <div>
+        <ol class="steps" id="steps" aria-live="polite"></ol>
+        <div class="axis" id="axis" aria-hidden="true"></div>
+        <div class="legend" aria-hidden="true"><span><i></i>1% · atenção</span><span><i class="alert"></i>3% · investigar (NICE)</span></div>
+        <div class="verdict" id="verdict"></div>
+        <p class="sim-note">Números ilustrativos, só para entender o raciocínio. Os valores do sistema virão da pesquisa da fase de conteúdo, cada um com a sua fonte.</p>
+      </div>
+    </div>
+    <aside class="se">
+      <p class="se-tag">Engenharia de software</p>
+      <h4>Explicabilidade: um modelo que mostra a conta</h4>
+      <p>Em saúde, "a IA disse" não basta. Escolhemos um modelo em que cada resultado pode ser decomposto em partes: ponto de partida, cada pista e o peso de cada uma. Isso facilita testar, corrigir e defender na frente da banca. Um modelo caixa-preta treinado com dados de outro país seria mais difícil de justificar e de validar em 8 dias.</p>
+      <p class="here"><strong>No plano:</strong> o motor devolve, junto com o risco, a lista de contribuições, e um teste automático confere que a soma das partes bate com o resultado.</p>
+    </aside>
+  </section>
+
+  <section id="base">
+    <p class="eyebrow">A base de conhecimento no banco</p>
+    <h2>Os números saem do código e vão para uma tabela com fonte</h2>
+    <p class="prose">Hoje, para mudar o peso de um sintoma, alguém precisa editar o código e publicar o sistema de novo. Na nova versão, cada número vira uma linha numa tabela do banco de dados, com a fonte ao lado. A médica pode ajustar um valor pela tela "Base da IA" e o sistema registra quem mudou, quando e de quanto para quanto.</p>
+    <figure class="fig">
+      <div class="fig-scroll">
+        <svg viewBox="0 0 980 330" role="img" aria-label="Comparação. Antes: o valor do artigo passa por um programador, que edita o código e publica uma nova versão, e só então o resultado muda, sem mostrar a fonte. Depois: o valor do artigo vira uma linha na base de conhecimento com fonte; o motor de risco lê a base a cada cálculo e explica o resultado; a médica edita valores pela tela Base da IA e cada edição vira uma versão no histórico.">
+          <defs>
+            <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker>
+          </defs>
+          <line class="d-grid" x1="490" y1="16" x2="490" y2="320" stroke-dasharray="4 5"/>
+          <text class="d-lane" x="20" y="28">ANTES · O NÚMERO MORA NO CÓDIGO</text>
+          <text class="d-lane" x="510" y="28">DEPOIS · O NÚMERO MORA NO BANCO</text>
+
+          <rect class="d-box" x="40" y="50" width="210" height="48" rx="9"/>
+          <text class="d-t" x="56" y="70">Artigo científico</text>
+          <text class="d-s" x="56" y="88">alguém lê e anota o valor</text>
+          <rect class="d-box" x="40" y="120" width="210" height="48" rx="9"/>
+          <text class="d-t" x="56" y="140">Programador</text>
+          <text class="d-s" x="56" y="158">edita o código à mão</text>
+          <rect class="d-box" x="40" y="190" width="210" height="48" rx="9"/>
+          <text class="d-t" x="56" y="210">Nova versão do sistema</text>
+          <text class="d-s" x="56" y="228">publicar tudo de novo</text>
+          <rect class="d-box" x="40" y="260" width="210" height="48" rx="9"/>
+          <text class="d-t" x="56" y="280">Resultado muda</text>
+          <text class="d-s" x="56" y="298">ninguém vê de onde veio</text>
+          <line class="d-ar" x1="145" y1="99" x2="145" y2="117" marker-end="url(#a3)"/>
+          <line class="d-ar" x1="145" y1="169" x2="145" y2="187" marker-end="url(#a3)"/>
+          <line class="d-ar" x1="145" y1="239" x2="145" y2="257" marker-end="url(#a3)"/>
+          <text class="d-lab" x="154" y="112">passa o valor</text>
+          <text class="d-lab" x="154" y="182">mexe e testa</text>
+          <text class="d-lab" x="154" y="252">só então</text>
+          <text class="d-t" x="282" y="140">Problemas</text>
+          <text class="d-s" x="282" y="162">• só quem programa consegue mudar</text>
+          <text class="d-s" x="282" y="182">• cada ajuste exige nova versão</text>
+          <text class="d-s" x="282" y="202">• número sem fonte visível</text>
+          <text class="d-s" x="282" y="222">• difícil explicar para a banca</text>
+
+          <rect class="d-box" x="530" y="50" width="210" height="48" rx="9"/>
+          <text class="d-t" x="546" y="70">Artigo científico</text>
+          <text class="d-s" x="546" y="88">INCA, NICE, sociedades médicas</text>
+          <rect class="d-box hl" x="530" y="120" width="210" height="48" rx="9"/>
+          <text class="d-t" x="546" y="140">Base de conhecimento</text>
+          <text class="d-s" x="546" y="158">tabela no banco, com fonte</text>
+          <rect class="d-box" x="530" y="190" width="210" height="48" rx="9"/>
+          <text class="d-t" x="546" y="210">Motor de risco</text>
+          <text class="d-s" x="546" y="228">lê a base a cada cálculo</text>
+          <rect class="d-box" x="530" y="260" width="210" height="48" rx="9"/>
+          <text class="d-t" x="546" y="280">Resultado com o porquê</text>
+          <text class="d-s" x="546" y="298">mostra o número e a fonte</text>
+          <line class="d-ar" x1="635" y1="99" x2="635" y2="117" marker-end="url(#a3)"/>
+          <line class="d-ar" x1="635" y1="169" x2="635" y2="187" marker-end="url(#a3)"/>
+          <line class="d-ar" x1="635" y1="239" x2="635" y2="257" marker-end="url(#a3)"/>
+          <text class="d-lab" x="644" y="112">vira uma linha</text>
+          <text class="d-lab" x="644" y="182">lida na hora</text>
+          <text class="d-lab" x="644" y="252">explica</text>
+
+          <rect class="d-box" x="780" y="120" width="180" height="48" rx="9"/>
+          <text class="d-t" x="796" y="140">Médica · Base da IA</text>
+          <text class="d-s" x="796" y="158">muda um valor na tela</text>
+          <rect class="d-box" x="780" y="210" width="180" height="48" rx="9"/>
+          <text class="d-t" x="796" y="230">Histórico de versões</text>
+          <text class="d-s" x="796" y="248">quem, quando, de → para</text>
+          <line class="d-ar" x1="779" y1="144" x2="743" y2="144" marker-end="url(#a3)"/>
+          <text class="d-lab" x="761" y="137" text-anchor="middle">edita</text>
+          <line class="d-ar" x1="870" y1="169" x2="870" y2="207" marker-end="url(#a3)"/>
+          <text class="d-lab" x="878" y="193">vira versão</text>
+        </svg>
+      </div>
+      <figcaption>À esquerda, o caminho atual: para mudar um número é preciso passar por um programador e publicar tudo de novo. À direita, o caminho novo: o motor lê a base a cada cálculo, então mudar a tabela muda o resultado na hora, e o histórico guarda cada edição.</figcaption>
+    </figure>
+    <aside class="se">
+      <p class="se-tag">Engenharia de software</p>
+      <h4>Separar dados de lógica</h4>
+      <p>A lógica (como calcular) muda pouco e fica no código, coberta por testes. Os dados (quanto vale cada pista) mudam com a ciência e ficam no banco, editáveis. Essa separação é o que permite parametrizar a IA sem reescrever o sistema.</p>
+      <p class="here"><strong>No plano:</strong> as 8 doenças atuais migram para o banco sem mudar nenhum resultado, e os 5 cânceres já nascem lá.</p>
+    </aside>
+    <aside class="se">
+      <p class="se-tag">Engenharia de software</p>
+      <h4>Versionamento e rastreabilidade</h4>
+      <p>Todo número tem uma fonte, e toda mudança tem autor, data e valor anterior. Se um resultado parecer estranho, dá para descobrir de onde veio. É o mesmo princípio do Git, aplicado aos dados da IA. E existe o botão "Restaurar padrão" para desfazer as edições feitas durante a demonstração.</p>
+      <p class="here"><strong>No plano:</strong> uma tabela de histórico e um documento com a origem de cada valor, a população estudada e o nível de confiança.</p>
+    </aside>
+  </section>
+
+  <section id="sistema">
+    <p class="eyebrow">Por dentro do sistema</p>
+    <h2>Quatro camadas, cada uma com um papel</h2>
+    <p class="prose">As pessoas usam as telas. As telas conversam com o servidor. O servidor pede o cálculo ao motor de risco, que consulta a base de conhecimento. Os dados de cada paciente (exames, pulseira, triagens) ficam guardados à parte.</p>
+    <figure class="fig">
+      <div class="fig-scroll">
+        <svg viewBox="0 0 980 350" role="img" aria-label="Arquitetura. Visitante, paciente e médica usam as telas. As telas mandam pedidos ao servidor e recebem respostas. O servidor pede o cálculo ao motor de risco, enviando exames e peso; o motor lê fatores e fontes da base de conhecimento; o servidor grava edições da médica na base e lê e grava os dados do paciente. Motor de risco e base de conhecimento são as partes novas.">
+          <defs>
+            <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker>
+          </defs>
+          <rect class="d-box" x="20" y="30" width="150" height="64" rx="10"/>
+          <text class="d-t" x="36" y="56">Visitante</text>
+          <text class="d-s" x="36" y="76">celular ou notebook</text>
+          <rect class="d-box" x="20" y="148" width="150" height="64" rx="10"/>
+          <text class="d-t" x="36" y="174">Paciente</text>
+          <text class="d-s" x="36" y="194">app com login</text>
+          <rect class="d-box" x="20" y="266" width="150" height="64" rx="10"/>
+          <text class="d-t" x="36" y="292">Médica</text>
+          <text class="d-s" x="36" y="312">painel e Base da IA</text>
+
+          <rect class="d-box" x="230" y="140" width="170" height="80" rx="10"/>
+          <text class="d-t" x="246" y="166">Telas</text>
+          <text class="d-s" x="246" y="186">o que a pessoa vê</text>
+          <text class="d-tag" x="246" y="206">frontend · React</text>
+
+          <rect class="d-box" x="470" y="140" width="170" height="80" rx="10"/>
+          <text class="d-t" x="486" y="166">Servidor</text>
+          <text class="d-s" x="486" y="186">recebe e responde</text>
+          <text class="d-tag" x="486" y="206">backend · Express</text>
+
+          <rect class="d-box hl" x="740" y="20" width="220" height="80" rx="10"/>
+          <text class="d-t" x="756" y="46">Motor de risco</text>
+          <text class="d-s" x="756" y="66">calcula e explica</text>
+          <text class="d-tag" x="756" y="86">lógica · bayesiana</text>
+          <rect class="d-box hl" x="740" y="140" width="220" height="80" rx="10"/>
+          <text class="d-t" x="756" y="166">Base de conhecimento</text>
+          <text class="d-s" x="756" y="186">fatores, pesos e fontes</text>
+          <text class="d-tag" x="756" y="206">banco · SQLite</text>
+          <rect class="d-box" x="740" y="260" width="220" height="80" rx="10"/>
+          <text class="d-t" x="756" y="286">Dados do paciente</text>
+          <text class="d-s" x="756" y="306">exames, pulseira, triagens</text>
+          <text class="d-tag" x="756" y="326">banco · SQLite</text>
+
+          <line class="d-ar" x1="171" y1="64" x2="226" y2="156" marker-end="url(#a4)"/>
+          <line class="d-ar" x1="171" y1="180" x2="226" y2="180" marker-end="url(#a4)"/>
+          <line class="d-ar" x1="171" y1="296" x2="226" y2="204" marker-end="url(#a4)"/>
+          <text class="d-lab" x="199" y="173" text-anchor="middle">usa</text>
+
+          <line class="d-ar" x1="401" y1="168" x2="467" y2="168" marker-end="url(#a4)"/>
+          <text class="d-lab" x="435" y="160" text-anchor="middle">pedido</text>
+          <line class="d-ar" x1="469" y1="194" x2="403" y2="194" marker-end="url(#a4)"/>
+          <text class="d-lab" x="435" y="212" text-anchor="middle">resposta</text>
+
+          <path class="d-ar" d="M 555 140 V 60 H 737" marker-end="url(#a4)"/>
+          <text class="d-lab" x="564" y="96">pede o cálculo</text>
+          <text class="d-lab" x="564" y="110">com exames e peso</text>
+          <line class="d-ar" x1="850" y1="139" x2="850" y2="103" marker-end="url(#a4)"/>
+          <text class="d-lab" x="858" y="125">fatores e fontes</text>
+          <line class="d-ar" x1="641" y1="180" x2="737" y2="180" marker-end="url(#a4)"/>
+          <text class="d-lab" x="689" y="172" text-anchor="middle">edita a base</text>
+          <path class="d-ar" d="M 555 220 V 300 H 737" marker-end="url(#a4)"/>
+          <text class="d-lab" x="564" y="262">lê e grava</text>
+        </svg>
+      </div>
+      <figcaption>Em destaque, as duas partes novas desta versão: o motor de risco e a base de conhecimento. O resto do sistema já existe e passa a usá-las.</figcaption>
+    </figure>
+    <aside class="se">
+      <p class="se-tag">Engenharia de software</p>
+      <h4>Arquitetura em camadas</h4>
+      <p>Cada camada só conversa com a vizinha. As telas não fazem cálculo clínico, e o motor não sabe nada sobre botões. Por isso dá para testar o motor sozinho, trocar uma tela sem medo e usar o mesmo motor no teste do visitante, no app do paciente e no painel da médica.</p>
+      <p class="here"><strong>No plano:</strong> um único motor atende os três públicos; só as telas mudam.</p>
+    </aside>
+  </section>
+
+  <section id="casos">
+    <p class="eyebrow">Os casos da demonstração</p>
+    <h2>Três pacientes, três histórias, três resultados diferentes</h2>
+    <p class="prose">Os pacientes de exemplo são fictícios e já vêm cadastrados no sistema. Cada um mostra uma capacidade da IA.</p>
+    <div class="cards">
+      <article class="card case">
+        <p class="who">Roberto Alves</p>
+        <p class="age">63 anos · ex-fumante · caso novo</p>
+        <span class="pill l-investigar">COLORRETAL · INVESTIGAR</span>
+        <dl>
+          <div><dt>O que os dados mostram</dt><dd>A balança Care Plus registra 9% de peso perdido em 3 meses. O hemograma tem anemia por falta de ferro. O exame de sangue oculto nas fezes deu positivo.</dd></div>
+          <div><dt>O que a IA recomenda</dt><dd>Colonoscopia e consulta médica. Como ex-fumante, também a tomografia de pulmão de baixa dose.</dd></div>
+          <div><dt>O que demonstra</dt><dd>Pulseira, exames e sintomas somando evidência.</dd></div>
+        </dl>
+      </article>
+      <article class="card case">
+        <p class="who">Marina Azevedo</p>
+        <p class="age">34 anos · prevenção</p>
+        <span class="pill l-atencao">MAMA · ATENÇÃO</span>
+        <dl>
+          <div><dt>O que os dados mostram</dt><dd>A mãe teve câncer de mama aos 41 anos. O exame preventivo do colo do útero está atrasado.</dd></div>
+          <div><dt>O que a IA recomenda</dt><dd>Rastreamento de mama antecipado por causa da família (cerca de 2× a média) e colocar o preventivo em dia.</dd></div>
+          <div><dt>O que demonstra</dt><dd>Risco baixo hoje, mas o plano de exames muda pela história familiar.</dd></div>
+        </dl>
+      </article>
+      <article class="card case">
+        <p class="who">João Carlos</p>
+        <p class="age">58 anos · diabetes e pressão alta</p>
+        <span class="pill l-rotina">CÂNCER · ROTINA</span>
+        <dl>
+          <div><dt>O que os dados mostram</dt><dd>Crônicas descompensadas, que o app já acompanha. Nenhum sinal de câncer nos dados.</dd></div>
+          <div><dt>O que a IA recomenda</dt><dd>Rastreamento colorretal pela idade. Sobre o exame de próstata (PSA), conversar com o médico.</dd></div>
+          <div><dt>O que demonstra</dt><dd>A IA também diz quando não há motivo para alarme.</dd></div>
+        </dl>
+      </article>
+    </div>
+    <aside class="se">
+      <p class="se-tag">Engenharia de software</p>
+      <h4>Casos de teste que viram demonstração</h4>
+      <p>Os três pacientes não são só para a feira. Cada um vira um teste automático com o resultado esperado: se alguém mexer no motor e o Roberto deixar de aparecer como "investigar", o teste falha antes de chegar ao stand.</p>
+      <p class="here"><strong>No plano:</strong> casos chamados de "personas" nos testes, incluindo um que nunca pode acontecer, como mostrar risco de próstata para uma mulher.</p>
+    </aside>
+  </section>
+
+  <section id="cronograma">
+    <p class="eyebrow">Cronograma</p>
+    <h2>Oito dias, com congelamento na quinta à noite</h2>
+    <p class="prose">A ordem não é aleatória. Primeiro vem a rede de segurança, depois o que todo o resto depende (base e motor), depois as telas e, por último, os materiais da feira. Na sexta não entra nada novo: só ensaio e correção.</p>
+    <figure class="fig">
+      <div class="fig-scroll">
+        <svg viewBox="0 0 980 410" role="img" aria-label="Cronograma de sexta 16 a sábado 24 de outubro. Sexta à noite: rede de segurança. Sábado: base no banco. Sábado à tarde e domingo: pesquisa dos números. Domingo: motor de câncer. Segunda: servidor e pacientes de demo. Terça: telas. Quarta: Base da IA e modo stand; banner enviado para a gráfica na quarta à noite. Quinta: pitch, FAQ, slides e documentação, com congelamento às 22h. Sexta: ensaios. Sábado 24: feira.">
+          <rect class="d-col" x="320" y="56" width="160" height="336"/>
+          <rect class="d-col" x="800" y="56" width="80" height="336"/>
+          <rect class="d-col feira" x="880" y="56" width="80" height="336"/>
+          <text class="d-day" x="280" y="30" text-anchor="middle">Sex</text><text class="d-day" x="280" y="46" text-anchor="middle">16</text>
+          <text class="d-day" x="360" y="30" text-anchor="middle">Sáb</text><text class="d-day" x="360" y="46" text-anchor="middle">17</text>
+          <text class="d-day" x="440" y="30" text-anchor="middle">Dom</text><text class="d-day" x="440" y="46" text-anchor="middle">18</text>
+          <text class="d-day" x="520" y="30" text-anchor="middle">Seg</text><text class="d-day" x="520" y="46" text-anchor="middle">19</text>
+          <text class="d-day" x="600" y="30" text-anchor="middle">Ter</text><text class="d-day" x="600" y="46" text-anchor="middle">20</text>
+          <text class="d-day" x="680" y="30" text-anchor="middle">Qua</text><text class="d-day" x="680" y="46" text-anchor="middle">21</text>
+          <text class="d-day" x="760" y="30" text-anchor="middle">Qui</text><text class="d-day" x="760" y="46" text-anchor="middle">22</text>
+          <text class="d-day" x="840" y="30" text-anchor="middle">Sex</text><text class="d-day" x="840" y="46" text-anchor="middle">23</text>
+          <text class="d-day" x="920" y="30" text-anchor="middle">Sáb</text><text class="d-day" x="920" y="46" text-anchor="middle">24</text>
+          <line class="d-grid" x1="240" y1="56" x2="240" y2="392"/>
+          <line class="d-grid" x1="320" y1="56" x2="320" y2="392"/>
+          <line class="d-grid" x1="400" y1="56" x2="400" y2="392"/>
+          <line class="d-grid" x1="480" y1="56" x2="480" y2="392"/>
+          <line class="d-grid" x1="560" y1="56" x2="560" y2="392"/>
+          <line class="d-grid" x1="640" y1="56" x2="640" y2="392"/>
+          <line class="d-grid" x1="720" y1="56" x2="720" y2="392"/>
+          <line class="d-grid" x1="800" y1="56" x2="800" y2="392"/>
+          <line class="d-grid" x1="880" y1="56" x2="880" y2="392"/>
+          <line class="d-grid" x1="960" y1="56" x2="960" y2="392"/>
+
+          <text class="d-row" x="16" y="84">Rede de segurança + correções</text>
+          <rect class="d-bar" x="282" y="72" width="36" height="16" rx="4"/>
+          <text class="d-row" x="16" y="112">Base no banco (motor igual)</text>
+          <rect class="d-bar" x="322" y="100" width="76" height="16" rx="4"/>
+          <text class="d-row" x="16" y="140">Pesquisa dos números de câncer</text>
+          <rect class="d-bar" x="362" y="128" width="116" height="16" rx="4"/>
+          <text class="d-row" x="16" y="168">Motor de câncer + testes</text>
+          <rect class="d-bar" x="402" y="156" width="76" height="16" rx="4"/>
+          <text class="d-row" x="16" y="196">Servidor + pacientes de demo</text>
+          <rect class="d-bar" x="482" y="184" width="76" height="16" rx="4"/>
+          <text class="d-row" x="16" y="224">Telas: visitante e médica</text>
+          <rect class="d-bar" x="562" y="212" width="76" height="16" rx="4"/>
+          <text class="d-row" x="16" y="252">Base da IA, modo stand, offline</text>
+          <rect class="d-bar" x="642" y="240" width="76" height="16" rx="4"/>
+          <text class="d-row" x="16" y="280">Banner (rascunho → gráfica)</text>
+          <rect class="d-bar" x="602" y="268" width="116" height="16" rx="4"/>
+          <polygon class="d-ms" points="720,268 728,276 720,284 712,276"/>
+          <text class="d-ms-lab" x="734" y="280">vai p/ gráfica</text>
+          <text class="d-row" x="16" y="308">Pitch, FAQ, slides, docs</text>
+          <rect class="d-bar" x="722" y="296" width="76" height="16" rx="4"/>
+          <text class="d-row" x="16" y="336">Ensaios, só correções</text>
+          <rect class="d-bar done" x="802" y="324" width="76" height="16" rx="4"/>
+          <text class="d-row" x="16" y="364">Apresentação no stand</text>
+          <polygon class="d-ms" points="920,352 930,362 920,372 910,362"/>
+          <text class="d-ms-lab" x="904" y="366" text-anchor="end">feira</text>
+
+          <line class="d-ms-line" x1="800" y1="56" x2="800" y2="398"/>
+          <text class="d-ms-lab" x="796" y="406" text-anchor="end">congelamento · qui 22h</text>
+        </svg>
+      </div>
+      <figcaption>As colunas sombreadas marcam o fim de semana e o dia da feira. A linha tracejada é o congelamento: depois dela, nenhuma funcionalidade nova entra, só correções.</figcaption>
+    </figure>
+    <aside class="se">
+      <p class="se-tag">Engenharia de software</p>
+      <h4>Dependências e congelamento</h4>
+      <p>Uma tarefa só começa quando aquilo de que ela depende está pronto: não adianta desenhar a tela de risco antes de o motor existir. O congelamento (code freeze) protege a apresentação: mudança de última hora é a causa mais comum de demo quebrada.</p>
+      <p class="here"><strong>No plano:</strong> o banner tem prazo próprio, quarta à noite, porque a gráfica leva de 24 a 48 horas.</p>
+    </aside>
+  </section>
+
+  <section id="qualidade">
+    <p class="eyebrow">Qualidade</p>
+    <h2>Como garantimos que funciona no sábado</h2>
+    <p class="prose">A primeira tarefa do plano não é escrever nada novo. É fotografar como o motor atual responde a centenas de situações. Depois da reforma, ele precisa responder exatamente igual. Só então entram os cânceres.</p>
+    <figure class="fig">
+      <div class="fig-scroll">
+        <svg viewBox="0 0 980 186" role="img" aria-label="Caminho de cada mudança: a mudança passa pelos testes automáticos em Windows, Mac e Linux; se passar, vai para revisão em pull request; se aceita, entra na versão principal; isso dispara a publicação automática no Render. Se os testes falharem, a mudança volta e é corrigida antes de entrar.">
+          <defs>
+            <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker>
+            <marker id="a6r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head alert"/></marker>
+          </defs>
+          <rect class="d-box" x="20" y="36" width="152" height="70" rx="10"/>
+          <text class="d-t" x="96" y="66" text-anchor="middle">Mudança</text>
+          <text class="d-s" x="96" y="86" text-anchor="middle">uma parte do plano</text>
+          <rect class="d-box hl" x="217" y="36" width="152" height="70" rx="10"/>
+          <text class="d-t" x="293" y="66" text-anchor="middle">Testes automáticos</text>
+          <text class="d-s" x="293" y="86" text-anchor="middle">Windows, Mac e Linux</text>
+          <rect class="d-box" x="414" y="36" width="152" height="70" rx="10"/>
+          <text class="d-t" x="490" y="66" text-anchor="middle">Revisão</text>
+          <text class="d-s" x="490" y="86" text-anchor="middle">Pull Request</text>
+          <rect class="d-box" x="611" y="36" width="152" height="70" rx="10"/>
+          <text class="d-t" x="687" y="66" text-anchor="middle">Versão principal</text>
+          <text class="d-s" x="687" y="86" text-anchor="middle">branch main</text>
+          <rect class="d-box" x="808" y="36" width="152" height="70" rx="10"/>
+          <text class="d-t" x="884" y="66" text-anchor="middle">Publicação</text>
+          <text class="d-s" x="884" y="86" text-anchor="middle">Render, automática</text>
+          <line class="d-ar" x1="174" y1="71" x2="214" y2="71" marker-end="url(#a6)"/>
+          <text class="d-lab" x="194" y="62" text-anchor="middle">envia</text>
+          <line class="d-ar" x1="371" y1="71" x2="411" y2="71" marker-end="url(#a6)"/>
+          <text class="d-lab" x="391" y="62" text-anchor="middle">passou</text>
+          <line class="d-ar" x1="568" y1="71" x2="608" y2="71" marker-end="url(#a6)"/>
+          <text class="d-lab" x="588" y="62" text-anchor="middle">aceita</text>
+          <line class="d-ar" x1="765" y1="71" x2="805" y2="71" marker-end="url(#a6)"/>
+          <text class="d-lab" x="785" y="62" text-anchor="middle">dispara</text>
+          <path class="d-ar alert" d="M 293 106 V 146 H 96 V 109" marker-end="url(#a6r)"/>
+          <text class="d-lab alert" x="194" y="168" text-anchor="middle">falhou: volta e corrige antes de entrar</text>
+        </svg>
+      </div>
+      <figcaption>Todo pedaço do plano segue este caminho. O que falha nos testes não chega à versão principal, então o site online e o notebook do stand só recebem o que já passou.</figcaption>
+    </figure>
+    <figure class="fig">
+      <div class="fig-scroll">
+        <svg class="narrow" viewBox="0 0 900 320" role="img" aria-label="Pirâmide de testes. Na base, muitos testes de unidade para a matemática do motor, rápidos e baratos. Acima, testes de integração do servidor com o banco. Acima, testes de fumaça com o sistema inteiro de pé. No topo, poucos ensaios manuais no notebook do stand, lentos e caros.">
+          <defs>
+            <marker id="a7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-head"/></marker>
+          </defs>
+          <polygon class="d-layer" points="200,20 300,20 311,90 189,90"/>
+          <polygon class="d-layer" points="189,90 311,90 371,160 129,160"/>
+          <polygon class="d-layer" points="129,160 371,160 431,230 69,230"/>
+          <polygon class="d-layer hl" points="69,230 431,230 470,300 30,300"/>
+          <text class="d-t" x="250" y="60" text-anchor="middle">Ensaio</text>
+          <text class="d-t" x="250" y="130" text-anchor="middle">Fumaça</text>
+          <text class="d-t" x="250" y="200" text-anchor="middle">Integração</text>
+          <text class="d-t" x="250" y="270" text-anchor="middle">Unidade</text>
+          <line class="d-ar dash" x1="315" y1="55" x2="508" y2="55"/>
+          <line class="d-ar dash" x1="345" y1="125" x2="508" y2="125"/>
+          <line class="d-ar dash" x1="405" y1="195" x2="508" y2="195"/>
+          <line class="d-ar dash" x1="455" y1="265" x2="508" y2="265"/>
+          <text class="d-note" x="516" y="51">no notebook do stand, Wi‑Fi desligado</text>
+          <text class="d-s" x="516" y="67">feito por pessoas, poucas vezes</text>
+          <text class="d-note" x="516" y="121">o sistema inteiro de pé</text>
+          <text class="d-s" x="516" y="137">login, teste do visitante, painel</text>
+          <text class="d-note" x="516" y="191">servidor + banco juntos</text>
+          <text class="d-s" x="516" y="207">editar a base muda o resultado?</text>
+          <text class="d-note" x="516" y="261">a matemática do motor</text>
+          <text class="d-s" x="516" y="277">centenas de casos em segundos</text>
+          <line class="d-ar" x1="880" y1="292" x2="880" y2="30" marker-end="url(#a7)"/>
+          <text class="d-lab" x="872" y="24" text-anchor="end">mais lento e caro</text>
+          <text class="d-lab" x="872" y="312" text-anchor="end">mais rápido e barato</text>
+        </svg>
+      </div>
+      <figcaption>A pirâmide de testes: muitos testes rápidos na base, poucos testes caros no topo. Quanto mais embaixo o problema é pego, mais barato é corrigir.</figcaption>
+    </figure>
+    <aside class="se">
+      <p class="se-tag">Engenharia de software</p>
+      <h4>Teste de regressão: a rede de segurança antes da reforma</h4>
+      <p>Reformar o motor sem quebrar o que funciona exige uma referência. Gravamos as respostas do motor atual para centenas de perfis e respostas (técnica chamada <em>golden master</em>). Depois da reforma, o teste compara uma por uma. Uma única diferença e o teste falha.</p>
+      <p class="here"><strong>No plano:</strong> é a primeira tarefa, feita antes de qualquer mudança no motor.</p>
+    </aside>
+    <aside class="se">
+      <p class="se-tag">Engenharia de software</p>
+      <h4>Integração contínua (CI)</h4>
+      <p>Um robô do GitHub testa cada mudança em Windows, Mac e Linux, em duas versões do Node. Foi assim que garantimos que o projeto roda nos PCs Windows do grupo, e é assim que vamos garantir que o notebook do stand funcione.</p>
+      <p class="here"><strong>No plano:</strong> os testes novos entram no mesmo robô, e nada entra na versão principal com o robô vermelho.</p>
+    </aside>
+  </section>
+
+  <section id="prioridades">
+    <p class="eyebrow">Prioridades</p>
+    <h2>O que entra, o que pode entrar e o que fica para depois</h2>
+    <p class="prose">Com prazo fixo, o escopo é o que se ajusta. A lista abaixo usa o método MoSCoW: decidimos agora o que cortar, para não decidir no desespero de sexta.</p>
+    <div class="moscow">
+      <article class="card">
+        <h3><span class="dot" style="background:var(--alert)"></span>Tem que ter</h3>
+        <ul>
+          <li>Base de conhecimento no banco, com fonte</li>
+          <li>5 cânceres e risco com o porquê</li>
+          <li>Teste rápido do visitante</li>
+          <li>Painel da médica com Roberto e Marina</li>
+          <li>Tela Base da IA: editar e restaurar</li>
+          <li>Testes automáticos no robô</li>
+          <li>Modo stand sem internet + site online</li>
+          <li>Pitch, FAQ e banner</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3><span class="dot" style="background:var(--warn)"></span>Deveria ter</h3>
+        <ul>
+          <li>Etapa de câncer na triagem do paciente</li>
+          <li>Alerta em tempo real para a médica</li>
+          <li>Exame normal diminuindo o risco</li>
+          <li>Tendência de peso pela balança</li>
+          <li>Slides</li>
+          <li>Documentação técnica atualizada</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3><span class="dot" style="background:var(--accent)"></span>Poderia ter</h3>
+        <ul>
+          <li>Página "Meus riscos" do paciente</li>
+          <li>Aviso de rastreamento em dia ou atrasado</li>
+          <li>Câncer de pele</li>
+          <li>Contador anônimo de testes feitos na feira</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3><span class="dot" style="background:var(--line-strong)"></span>Não vamos fazer agora</h3>
+        <ul>
+          <li>Treinar modelo com dados de pacientes reais</li>
+          <li>Regras de emergência editáveis no banco</li>
+          <li>Senha para o teste do visitante</li>
+        </ul>
+      </article>
+    </div>
+    <h3 style="margin-top:26px">Se atrasar, cortamos nesta ordem</h3>
+    <ol class="cut">
+      <li>A etapa de câncer na triagem do paciente (o risco continua aparecendo pelo painel da médica).</li>
+      <li>A edição de exames e de rastreamento na Base da IA (fica a edição dos pesos e limites).</li>
+      <li>A tendência de peso automática (o dado entra direto no cadastro do Roberto).</li>
+      <li>Parte dos slides.</li>
+      <li>A padronização visual dos selos de risco nas telas antigas.</li>
+    </ol>
+  </section>
+
+  <section id="riscos">
+    <p class="eyebrow">Riscos</p>
+    <h2>O que pode dar errado e o que já está previsto</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Risco</th><th>Por que importa</th><th>O que fazemos</th></tr></thead>
+        <tbody>
+          <tr><td>Percentuais de câncer pequenos</td><td>"0,3%" parece nada; "12%" assusta.</td><td>Mostrar a categoria, "quantas vezes a média" e "tantas pessoas em cada 1.000", nunca só o percentual.</td></tr>
+          <tr><td>Reforma quebrar o que funciona</td><td>As 8 doenças atuais já estão na demo.</td><td>Teste de regressão gravado antes de mexer.</td></tr>
+          <tr><td>Diretrizes mudaram em 2024–25</td><td>Mamografia e preventivo do colo do útero tiveram mudanças recentes.</td><td>Pesquisa logo no início, cada número com fonte e ano.</td></tr>
+          <tr><td>Internet ruim na feira</td><td>Wi‑Fi de evento costuma falhar.</td><td>Tudo roda no notebook sem internet; o site online é bônus.</td></tr>
+          <tr><td>Notebook Windows falhar na hora</td><td>É o equipamento do stand.</td><td>Robô testando Windows a cada mudança e ensaio no próprio notebook na quinta e na sexta.</td></tr>
+          <tr><td>Visitante se assustar</td><td>Câncer é tema sensível.</td><td>Linguagem calma, sem vermelho, "não é diagnóstico" visível e roteiro do grupo para acolher. As perguntas íntimas podem ser respondidas no próprio celular.</td></tr>
+          <tr><td>Gráfica atrasar o banner</td><td>Sem banner, o stand perde força.</td><td>Arquivo pronto na quarta à noite; plano B em folhas A3 com o QR.</td></tr>
+          <tr><td>Cronograma apertar</td><td>Oito dias para tudo.</td><td>Ordem de corte já definida acima.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <aside class="se">
+      <p class="se-tag">Engenharia de software</p>
+      <h4>Gestão de riscos e ética desde o desenho</h4>
+      <p>Listar riscos antes de começar transforma surpresa em plano B. Alguns riscos são técnicos (Wi‑Fi, Windows); outros são humanos e éticos (alarmar alguém, guardar dados de saúde). Os éticos entram no projeto desde o início: o teste do visitante não grava nada, e todo resultado diz que não é diagnóstico.</p>
+      <p class="here"><strong>No plano:</strong> a FAQ da banca inclui privacidade (LGPD), limites do modelo e o que seria preciso para virar produto (validação clínica e regras da ANVISA para software em saúde).</p>
+    </aside>
+  </section>
+
+  <section id="grupo">
+    <p class="eyebrow">Tarefas do grupo</p>
+    <h2>O que precisamos de vocês</h2>
+    <p class="prose">O código fica com o Claude. Estas tarefas dependem de pessoas e têm data.</p>
+    <ol class="todo">
+      <li><span class="when">até dom 18</span><p><span class="who">Igor:</span> criar o site no Render (New → Blueprint → escolher o repositório → Apply) e mandar o link. Leva uns 5 minutos. O link vai no QR code do banner.</p></li>
+      <li><span class="when">qui 22, manhã</span><p><span class="who">Grupo:</span> mandar o banner para a gráfica. O PDF fica pronto na quarta à noite.</p></li>
+      <li><span class="when">qui 22 e sex 23</span><p><span class="who">Grupo:</span> no notebook Windows do stand, baixar o projeto, rodar <code>npm run setup</code> e <code>npm run stand</code> com o Wi‑Fi desligado e confirmar que tudo abre.</p></li>
+      <li><span class="when">sex 23</span><p><span class="who">Grupo:</span> ensaiar o pitch de 30 segundos e o de 3 minutos, e estudar a FAQ da banca.</p></li>
+      <li><span class="when">sáb 24, cedo</span><p><span class="who">Grupo:</span> rodar <code>npm run stand</code> no notebook (as datas dos dados de exemplo ficam atualizadas) e abrir o site online para ele "acordar".</p></li>
+      <li><span class="when">durante a feira</span><p><span class="who">Grupo:</span> revezar quem demonstra e quem acompanha o visitante no teste.</p></li>
+    </ol>
+  </section>
+
+  <section id="conceitos">
+    <p class="eyebrow">Mapa de conceitos</p>
+    <h2>As práticas de engenharia de software deste plano</h2>
+    <p class="prose">Um resumo para estudar: cada prática, o que ela resolve e onde aparece no nosso trabalho.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Prática</th><th>O que resolve</th><th>Onde aparece</th></tr></thead>
+        <tbody>
+          <tr><td>Requisitos centrados no usuário</td><td>Construir o que as pessoas precisam, não o que é fácil de programar.</td><td>As jornadas do visitante e do grupo.</td></tr>
+          <tr><td>Teste de regressão</td><td>Mudar sem quebrar o que já funciona.</td><td>Comportamento do motor gravado antes da reforma.</td></tr>
+          <tr><td>Separação entre dados e lógica</td><td>Ajustar a IA sem reescrever o sistema.</td><td>Base de conhecimento no banco.</td></tr>
+          <tr><td>Rastreabilidade</td><td>Saber de onde vem cada número.</td><td>Coluna de fonte e documento da base clínica.</td></tr>
+          <tr><td>Versionamento</td><td>Desfazer erros e saber quem mudou o quê.</td><td>Git no código e histórico na Base da IA.</td></tr>
+          <tr><td>Arquitetura em camadas</td><td>Cada parte com um papel, testável sozinha.</td><td>Telas, servidor, motor e base.</td></tr>
+          <tr><td>Explicabilidade</td><td>Confiança em decisões automáticas.</td><td>O "por quê" fator a fator.</td></tr>
+          <tr><td>Pirâmide de testes</td><td>Pegar erros cedo e barato.</td><td>Unidade, integração, fumaça e ensaio.</td></tr>
+          <tr><td>Integração contínua</td><td>Toda mudança testada automaticamente.</td><td>Robô em Windows, Mac e Linux.</td></tr>
+          <tr><td>Priorização (MoSCoW)</td><td>Cumprir prazo fixo cortando o certo.</td><td>Lista de prioridades e ordem de corte.</td></tr>
+          <tr><td>Gestão de riscos</td><td>Transformar surpresa em plano B.</td><td>Tabela de riscos.</td></tr>
+          <tr><td>Ambientes e implantação</td><td>Funcionar em qualquer lugar.</td><td>Notebook sem internet e site online.</td></tr>
+          <tr><td>Ética e privacidade desde o desenho</td><td>Proteger as pessoas, não só o código.</td><td>Teste sem gravar dados e aviso de "não é diagnóstico".</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="glossario">
+    <p class="eyebrow">Glossário</p>
+    <h2>Palavras que vão aparecer</h2>
+    <dl class="gloss">
+      <div><dt>Ponto de partida (prior)</dt><dd>Chance de alguém com o mesmo perfil receber o diagnóstico nos próximos 2 anos, antes de qualquer pista.</dd></div>
+      <div><dt>Força da pista</dt><dd>Quanto um achado multiplica ou divide a chance. Nos estudos se chama razão de verossimilhança.</dd></div>
+      <div><dt>Limiar</dt><dd>Valor que muda a recomendação. Aqui, 1% para atenção e 3% para investigar.</dd></div>
+      <div><dt>Rastreamento</dt><dd>Exame feito em quem não tem sintomas, para achar a doença cedo. Exemplos: mamografia e colonoscopia.</dd></div>
+      <div><dt>Banco de dados</dt><dd>Onde o sistema guarda informação organizada em tabelas.</dd></div>
+      <div><dt>Dados de exemplo (seed)</dt><dd>Pacientes fictícios carregados no banco para a demonstração: Roberto, Marina e João.</dd></div>
+      <div><dt>Deploy</dt><dd>Publicar o sistema para outras pessoas usarem, como o site no Render.</dd></div>
+      <div><dt>Integração contínua (CI)</dt><dd>Robô que testa automaticamente cada mudança antes de ela entrar.</dd></div>
+      <div><dt>Pull Request</dt><dd>Pedido para juntar uma mudança à versão principal, com revisão e testes.</dd></div>
+      <div><dt>Congelamento (code freeze)</dt><dd>Momento a partir do qual só se corrigem erros, sem novidades.</dd></div>
+    </dl>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>HealthInPulse é um projeto acadêmico (FIAP × Care Plus). Pacientes e dados são fictícios. Nenhum resultado do sistema é diagnóstico. Os números do simulador desta página são ilustrativos.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var BASE = 0.0025;
+  var LOG_MIN = Math.log10(0.001);
+  var LOG_MAX = Math.log10(0.5);
+  var FIT = {
+    none: null,
+    pos: { label: 'Sangue oculto nas fezes positivo', lr: 12 },
+    neg: { label: 'Sangue oculto nas fezes negativo', lr: 0.25 }
+  };
+  var CHECKS = [
+    { id: 'c-anemia', label: 'Anemia por falta de ferro', lr: 3 },
+    { id: 'c-peso', label: 'Perda de 9% do peso', lr: 1.5 },
+    { id: 'c-sang', label: 'Sangue nas fezes percebido', lr: 4 },
+    { id: 'c-fam', label: 'Parente de 1º grau com o câncer', lr: 2 }
+  ];
+  var fit = 'pos';
+
+  function pos(p) {
+    var v = (Math.log10(p) - LOG_MIN) / (LOG_MAX - LOG_MIN);
+    return Math.max(0, Math.min(1, v));
+  }
+  function pct(p) {
+    var v = p * 100;
+    var d = v < 1 ? 2 : (v < 10 ? 1 : 0);
+    return v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d }) + '%';
+  }
+  function factorText(lr) {
+    if (lr >= 1) return '×' + lr.toLocaleString('pt-BR');
+    return '÷' + (1 / lr).toLocaleString('pt-BR');
+  }
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function track(p) {
+    var t = el('div', 'track');
+    var f = el('div', 'fill');
+    f.style.width = (pos(p) * 100).toFixed(2) + '%';
+    var m1 = el('div', 'mk');
+    m1.style.left = (pos(0.01) * 100).toFixed(2) + '%';
+    var m3 = el('div', 'mk alert');
+    m3.style.left = (pos(0.03) * 100).toFixed(2) + '%';
+    t.appendChild(f); t.appendChild(m1); t.appendChild(m3);
+    return t;
+  }
+
+  function render() {
+    var steps = [{ label: 'Ponto de partida: homem, 63 anos', lr: null }];
+    if (FIT[fit]) steps.push(FIT[fit]);
+    CHECKS.forEach(function (c) {
+      var box = document.getElementById(c.id);
+      if (box && box.checked) steps.push(c);
+    });
+
+    var list = document.getElementById('steps');
+    list.textContent = '';
+    var odds = BASE / (1 - BASE);
+    var p = BASE;
+    steps.forEach(function (s, i) {
+      if (s.lr) odds *= s.lr;
+      p = odds / (1 + odds);
+      var li = el('li', 'step' + (i === steps.length - 1 ? ' final' : ''));
+      var head = el('div', 'step-head');
+      var left = el('span');
+      if (s.lr) left.appendChild(el('span', 'f', factorText(s.lr)));
+      left.appendChild(document.createTextNode(s.label));
+      head.appendChild(left);
+      head.appendChild(el('b', null, pct(p)));
+      li.appendChild(head);
+      li.appendChild(track(p));
+      list.appendChild(li);
+    });
+
+    var v = document.getElementById('verdict');
+    v.textContent = '';
+    var lvl, cls, rec;
+    if (p >= 0.03) { lvl = 'INVESTIGAR'; cls = 'l-investigar'; rec = 'Recomendação: procurar um médico para investigar (colonoscopia).'; }
+    else if (p >= 0.01) { lvl = 'ATENÇÃO'; cls = 'l-atencao'; rec = 'Recomendação: conversar com o médico e manter o rastreamento em dia.'; }
+    else { lvl = 'ROTINA'; cls = 'l-rotina'; rec = 'Recomendação: seguir o rastreamento indicado para a idade.'; }
+    v.className = 'verdict ' + cls;
+    v.appendChild(el('span', 'lvl', lvl));
+    var n = Math.round(p * 1000);
+    v.appendChild(el('p', null, 'Estimativa: ' + pct(p) + ' em 2 anos, cerca de ' + n.toLocaleString('pt-BR') + ' em cada 1.000 pessoas com este quadro.'));
+    v.appendChild(el('p', null, rec));
+  }
+
+  function axis() {
+    var a = document.getElementById('axis');
+    [[0.001, '0,1%'], [0.003, '0,3%'], [0.01, '1%'], [0.03, '3%'], [0.1, '10%'], [0.3, '30%']].forEach(function (t) {
+      var s = el('span', null, t[1]);
+      s.style.left = (pos(t[0]) * 100).toFixed(2) + '%';
+      a.appendChild(s);
+    });
+  }
+
+  document.querySelectorAll('[data-fit]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      fit = b.getAttribute('data-fit');
+      document.querySelectorAll('[data-fit]').forEach(function (o) {
+        o.setAttribute('aria-pressed', String(o === b));
+      });
+      render();
+    });
+  });
+  CHECKS.forEach(function (c) {
+    var box = document.getElementById(c.id);
+    if (box) box.addEventListener('change', render);
+  });
+
+  axis();
+  render();
+})();
+</script>
+</body>
+</html>

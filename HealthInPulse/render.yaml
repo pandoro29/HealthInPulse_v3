@@ -1,0 +1,54 @@
+# Deploy grátis no Render (Blueprint): https://render.com/docs/blueprint-spec
+# No painel: New → Blueprint → escolha este repositório.
+#
+# Plano free: dorme após 15 min sem acesso (o primeiro acesso leva ~1 min) e o
+# disco é apagado a cada deploy/restart. O entrypoint recria o banco com os
+# dados da demo, então cada restart volta ao estado inicial.
+#
+# Dia da feira (QR para o /teste, sem portão de senha):
+#  - DEMO_PASSWORD e OPENAI_API_KEY ficam VAZIOS (Enter no Apply do Blueprint);
+#  - KB_EDIT fica 'false': no Render a Base da IA é só leitura, a edição da
+#    demo acontece no notebook (`npm run stand`);
+#  - keep-warm: o plano free dorme após 15 min. Crie um monitor grátis no
+#    UptimeRobot ou no cron-job.org chamando https://<seu-servico>.onrender.com/health
+#    a cada 10 min (de sexta à tarde até o fim da feira), e abra o /teste uma
+#    vez antes de montar o stand para conferir.
+
+services:
+  - type: web
+    name: healthinpulse
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # O Render fica atrás de proxy: o IP real do cliente vem no X-Forwarded-For
+      - key: TRUST_PROXY
+        value: '1'
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      # Senha da turma: o Render pede no Apply do Blueprint. Sem ela a demo fica
+      # aberta para qualquer um com o link (as senhas dos usuários são públicas).
+      # Na feira, deixe VAZIA: o visitante entra pelo QR sem digitar senha.
+      - key: DEMO_PASSWORD
+        sync: false
+      # Entrada sem senha (só nome / cards de demonstração). Ligada para a
+      # apresentação: qualquer um com o link entra, inclusive como médica
+      # (dados são de exemplo). Volte para 'false' depois.
+      - key: DEMO_MODE
+        value: 'true'
+      # Sala de aula sai por um IP só; 30 logins/15 min trava a apresentação
+      - key: AUTH_RATE_LIMIT
+        value: '300'
+      # Base da IA só leitura na demo pública (já é o padrão sem a variável;
+      # fica explícito): editar fica no notebook do stand. Não troque para true:
+      # qualquer visitante logaria como médica (a senha é pública) e alteraria a IA.
+      - key: KB_EDIT
+        value: 'false'
+      # Opcional. Recomendado deixar vazio na demo pública (simulador local):
+      # com chave real, cada triagem de quem entrar gasta a sua conta da OpenAI.
+      # Na feira, deixe VAZIA.
+      - key: OPENAI_API_KEY
+        sync: false

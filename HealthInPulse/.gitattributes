@@ -1,0 +1,9 @@
+# Normaliza fim de linha: o entrypoint.sh com CRLF (commit feito no Windows)
+# quebra o container com "exec format error" / "not found".
+* text=auto eol=lf
+
+*.docx binary
+*.png  binary
+*.jpg  binary
+*.ico  binary
+*.db   binary

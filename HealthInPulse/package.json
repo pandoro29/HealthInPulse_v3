@@ -1,0 +1,26 @@
+{
+  "name": "healthinpulse",
+  "version": "8.0.0",
+  "private": true,
+  "description": "HealthInPulse v8: comandos de raiz para rodar backend e frontend juntos",
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "predev": "node scripts/setup.mjs --check",
+    "dev": "concurrently --kill-others-on-fail --names api,web --prefix-colors cyan,magenta \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "db:reset": "node scripts/setup.mjs --reset-db",
+    "db:studio": "npm --prefix backend run db:studio",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix backend start",
+    "smoke": "node scripts/smoke.mjs",
+    "stand": "node scripts/stand.mjs",
+    "test": "npm --prefix backend test",
+    "qr": "node scripts/qr.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "qrcode": "^1.5.4"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

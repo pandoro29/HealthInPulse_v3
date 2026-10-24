@@ -1,0 +1,545 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite não suporta enums, arrays nem Json nativos no Prisma.
+// Enums viram String (validados no app); arrays/Json viram String com JSON serializado.
+
+// Enums lógicos (apenas referência):
+//   Role:              PATIENT | DOCTOR | ADMIN
+//   Gender:            MALE | FEMALE | OTHER
+//   ExamStatus:        PENDING | PROCESSING | DONE | ERROR
+//   RiskLevel:         LOW | MODERATE | HIGH | CRITICAL
+//   TriageStatus:      PENDING | IN_PROGRESS | COMPLETED
+//   NotificationType:  ALERT | REMINDER | INFO | CRITICAL
+//   DeviceType:        SMARTWATCH | OXIMETER | PRESSURE_MONITOR | ECG | GLUCOMETER | OTHER
+//   DeviceStatus:      ACTIVE | INACTIVE | SYNCING | ERROR
+//   AppointmentStatus: SCHEDULED | CONFIRMED | CANCELLED | COMPLETED
+//   AuditAction:       CREATE | UPDATE | DELETE | LOGIN | LOGOUT | VIEW | EXPORT
+
+model User {
+  id             String    @id @default(uuid())
+  // Login é por usuário (único, minúsculo). E-mail ficou opcional: o cadastro
+  // do paciente pede só usuário, nome e senha.
+  username       String    @unique
+  email          String?   @unique
+  passwordHash  String
+  role          String
+  isActive      Boolean  @default(true)
+  emailVerified Boolean  @default(false)
+  // Tutorial das abas: aparece uma vez por conta (null = ainda não viu)
+  tutorialSeenAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  patient       Patient?
+  doctor        Doctor?
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Patient {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  fullName       String
+  // Opcionais: idade e sexo vêm da triagem; o CPF saiu do app (coluna fica
+  // para dados antigos)
+  dateOfBirth    DateTime?
+  gender         String?
+  cpf            String?   @unique
+  phone          String?
+  avatarUrl      String?
+  bloodType      String?
+  height         Float?
+  weight         Float?
+  allergies      String    @default("[]")
+  chronicConds   String    @default("[]")
+  emergencyName  String?
+  emergencyPhone String?
+  healthCoins    Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vitalSigns    VitalSign[]
+  exams         Exam[]
+  wearableData  WearableData[]
+  triageAnswers TriageAnswer[]
+  aiReports     AiReport[]
+  devices       Device[]
+  appointments  Appointment[]
+  doctorLinks   DoctorPatient[]
+  goals         HealthGoal[]
+  coinTxs       HealthCoinTx[]
+  redemptions   RewardRedemption[]
+
+  @@index([userId])
+}
+
+model Doctor {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  fullName   String
+  crm        String   @unique
+  specialty  String
+  phone      String?
+  avatarUrl  String?
+  bio        String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patients     DoctorPatient[]
+  appointments Appointment[]
+  aiReports    AiReport[]
+
+  @@index([userId])
+}
+
+model DoctorPatient {
+  id        String   @id @default(uuid())
+  doctorId  String
+  patientId String
+  createdAt DateTime @default(now())
+
+  doctor  Doctor  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, patientId])
+}
+
+model VitalSign {
+  id          String   @id @default(uuid())
+  patientId   String
+  heartRate   Int?
+  systolic    Int?
+  diastolic   Int?
+  oxygenSat   Float?
+  temperature Float?
+  glucose     Float?
+  respirRate  Int?
+  weight      Float?
+  source      String?
+  recordedAt  DateTime @default(now())
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId, recordedAt])
+}
+
+model Device {
+  id         String    @id @default(uuid())
+  patientId  String
+  name       String
+  type       String
+  status     String    @default("INACTIVE")
+  macAddress String?
+  firmware   String?
+  lastSyncAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  patient      Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  wearableData WearableData[]
+
+  @@index([patientId])
+}
+
+model WearableData {
+  id          String    @id @default(uuid())
+  patientId   String
+  deviceId    String?
+  payload     String
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  device  Device? @relation(fields: [deviceId], references: [id])
+
+  @@index([patientId, createdAt])
+}
+
+model Exam {
+  id          String    @id @default(uuid())
+  patientId   String
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String
+  status      String    @default("PENDING")
+  ocrText     String?
+  uploadedAt  DateTime  @default(now())
+  processedAt DateTime?
+
+  patient    Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  examResult ExamResult?
+
+  @@index([patientId])
+}
+
+model ExamResult {
+  id         String   @id @default(uuid())
+  examId     String   @unique
+  summary    String
+  findings   String
+  riskLevel  String?
+  reviewedBy String?
+  createdAt  DateTime @default(now())
+
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+}
+
+model TriageAnswer {
+  id         String    @id @default(uuid())
+  patientId  String
+  status     String    @default("PENDING")
+  answers    String
+  riskLevel  String?
+  score      Int?
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+
+  patient  Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  aiReport AiReport?
+
+  @@index([patientId])
+}
+
+model AiReport {
+  id          String   @id @default(uuid())
+  patientId   String
+  doctorId    String?
+  triageId    String?  @unique
+  type        String
+  content     String
+  riskLevel   String?
+  suggestions String?
+  generatedAt DateTime @default(now())
+
+  patient Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor  Doctor?       @relation(fields: [doctorId], references: [id])
+  triage  TriageAnswer? @relation(fields: [triageId], references: [id])
+
+  @@index([patientId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+}
+
+model Appointment {
+  id          String   @id @default(uuid())
+  patientId   String
+  doctorId    String
+  scheduledAt DateTime
+  duration    Int      @default(30)
+  status      String   @default("SCHEDULED")
+  notes       String?
+  meetUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor  Doctor  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([doctorId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  oldValue  String?
+  newValue  String?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entity, entityId])
+}
+
+// ─── Gamificação ─────────────────────────────────────────
+// Lógico:
+//   HealthGoal.metric:    heartRate | systolic | glucose | weight | steps | spo2 | custom
+//   HealthGoal.targetCmp: lte | gte | between
+//   HealthGoal.status:    ACTIVE | DONE | EXPIRED
+//   HealthCoinTx.refType: goal | redemption | bonus | triage
+//   Reward.type:          consultation | discount | exam | item
+//   RewardRedemption.status: PENDING | APPROVED | DENIED
+
+model HealthGoal {
+  id           String    @id @default(uuid())
+  patientId    String
+  title        String
+  description  String?
+  metric       String
+  targetCmp    String
+  targetValue  Float?
+  rangeMin     Float?
+  rangeMax     Float?
+  current      Float?
+  progress     Float     @default(0)
+  status       String    @default("ACTIVE")
+  coinsReward  Int       @default(50)
+  source       String?
+  // Modelo da meta (data/prevention.js) e a fonte que a embasa (ClinicalSource.code)
+  templateCode String?
+  sourceCode   String?
+  startedAt    DateTime  @default(now())
+  completedAt  DateTime?
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId, status])
+}
+
+model HealthCoinTx {
+  id        String   @id @default(uuid())
+  patientId String
+  delta     Int
+  reason    String
+  refType   String?
+  refId     String?
+  createdAt DateTime @default(now())
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId, createdAt])
+}
+
+model Reward {
+  id          String  @id @default(uuid())
+  title       String
+  description String?
+  type        String
+  costCoins   Int
+  available   Boolean @default(true)
+  imageUrl    String?
+
+  redemptions RewardRedemption[]
+}
+
+model RewardRedemption {
+  id         String   @id @default(uuid())
+  patientId  String
+  rewardId   String
+  costCoins  Int
+  status     String   @default("PENDING")
+  redeemedAt DateTime @default(now())
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  reward  Reward  @relation(fields: [rewardId], references: [id])
+
+  @@index([patientId, redeemedAt])
+}
+
+// ─── Base de conhecimento clínico (kb) ───────────────────
+// Os parâmetros do motor bayesiano ficam aqui para a médica editar na tela
+// "Base da IA". O ponto de partida vem do JS (services/clinical/kb/buildFromSeed.js)
+// e é gravado por src/prisma/seedKnowledge.js; o motor lê pelo
+// services/clinical/kb/kbRepository.js.
+// As chaves estrangeiras usam códigos (não UUID), para o seed com upsert ser simples.
+// Campos JSON são String (when, showIf, options, followUps, panels, aliases).
+// Lógico:
+//   Condition.category:  CRONICA | ONCOLOGICA
+//   PriorRule.kind:      BASELINE | RISK_FACTOR | ADJUST
+//   PriorRule.effect:    set | add | multiply
+//   PriorRule.when / ScreeningRule.when / Symptom.showIf: [{ field, op, value }] (E entre as cláusulas)
+//   Symptom.kind:        QUESTION | LAB | WEARABLE
+//   Symptom.panels:      ["CRONICA"] | ["ONCOLOGIA", "RAPIDO"] | ...
+//   LabRule.operator:    gte | gt | lte | lt | positive
+//   ScreeningRule.kind:  POPULACIONAL | ALTO_RISCO | DECISAO_COMPARTILHADA
+
+model ClinicalSource {
+  code     String  @id
+  citation String
+  url      String?
+  year     Int?
+  note     String?
+
+  conditions        Condition[]
+  priorRules        PriorRule[]
+  conditionSymptoms ConditionSymptom[]
+  labRules          LabRule[]
+  screeningRules    ScreeningRule[]
+}
+
+model Condition {
+  code           String   @id
+  label          String
+  category       String
+  description    String?
+  basePrior      Float
+  maxPrior       Float    @default(0.95)
+  // Limiares da classificação oncológica (NICE NG12); nas crônicas ficam null
+  alertThreshold Float?   @default(0.03)
+  watchThreshold Float?   @default(0.01)
+  sexFilter      String?
+  minAge         Int?
+  sortOrder      Int      @default(0)
+  active         Boolean  @default(true)
+  sourceCode     String?
+  updatedAt      DateTime @updatedAt
+
+  source         ClinicalSource?    @relation(fields: [sourceCode], references: [code], onDelete: SetNull)
+  priorRules     PriorRule[]
+  symptoms       ConditionSymptom[]
+  screeningRules ScreeningRule[]
+
+  @@index([category, sortOrder])
+}
+
+model PriorRule {
+  id            String  @id @default(uuid())
+  conditionCode String
+  kind          String  @default("ADJUST")
+  label         String
+  when          String  @default("[]")
+  effect        String
+  amount        Float
+  modifiable    Boolean @default(false)
+  sortOrder     Int     @default(0)
+  active        Boolean @default(true)
+  sourceCode    String?
+
+  condition Condition       @relation(fields: [conditionCode], references: [code], onDelete: Cascade)
+  source    ClinicalSource? @relation(fields: [sourceCode], references: [code], onDelete: SetNull)
+
+  @@index([conditionCode, sortOrder])
+}
+
+model Symptom {
+  code            String  @id
+  label           String
+  kind            String  @default("QUESTION")
+  questionText    String?
+  help            String?
+  type            String  @default("boolean")
+  options         String?
+  binaryThreshold Float?
+  cost            Float   @default(1)
+  scaleTag        String?
+  redFlagProbe    Boolean @default(false)
+  showIf          String?
+  followUps       String  @default("[]")
+  panels          String  @default("[]")
+  sortOrder       Int     @default(0)
+  active          Boolean @default(true)
+
+  conditions ConditionSymptom[]
+  labRules   LabRule[]
+}
+
+model ConditionSymptom {
+  id            String  @id @default(uuid())
+  conditionCode String
+  symptomCode   String
+  pSx           Float
+  pNoSx         Float
+  // Gravado como está na matriz v7: é ele que dá o bônus do modo alvo
+  lrPos         Float?
+  sourceCode    String?
+  note          String?
+
+  condition Condition       @relation(fields: [conditionCode], references: [code], onDelete: Cascade)
+  symptom   Symptom         @relation(fields: [symptomCode], references: [code], onDelete: Cascade)
+  source    ClinicalSource? @relation(fields: [sourceCode], references: [code], onDelete: SetNull)
+
+  @@unique([conditionCode, symptomCode])
+  @@index([symptomCode])
+}
+
+model LabRule {
+  id           String  @id @default(uuid())
+  code         String
+  label        String
+  aliases      String  @default("[]")
+  operator     String
+  threshold    Float?
+  unit         String?
+  sexFilter    String?
+  minAge       Int?
+  maxAge       Int?
+  symptomCode  String
+  weight       Float   @default(1)
+  emitNegative Boolean @default(false)
+  maxAgeDays   Int     @default(365)
+  sortOrder    Int     @default(0)
+  active       Boolean @default(true)
+  sourceCode   String?
+
+  symptom Symptom         @relation(fields: [symptomCode], references: [code], onDelete: Cascade)
+  source  ClinicalSource? @relation(fields: [sourceCode], references: [code], onDelete: SetNull)
+
+  @@index([code])
+}
+
+model ScreeningRule {
+  id             String  @id @default(uuid())
+  conditionCode  String
+  exam           String
+  kind           String
+  sexFilter      String?
+  minAge         Int?
+  maxAge         Int?
+  when           String  @default("[]")
+  intervalMonths Int?
+  recommendation String
+  priority       Int     @default(0)
+  active         Boolean @default(true)
+  sourceCode     String?
+
+  condition Condition       @relation(fields: [conditionCode], references: [code], onDelete: Cascade)
+  source    ClinicalSource? @relation(fields: [sourceCode], references: [code], onDelete: SetNull)
+
+  @@index([conditionCode])
+}
+
+// Histórico de edições da base. A "versão do kb" é o maior `version` (0 sem
+// edições): o motor é recriado quando ela muda. Restaurar os valores de partida
+// também grava uma linha (field = "reset"), então a versão nunca volta atrás.
+model KnowledgeVersion {
+  version   Int      @id @default(autoincrement())
+  entity    String
+  entityId  String?
+  field     String?
+  oldValue  String?
+  newValue  String?
+  note      String?
+  changedBy String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+}

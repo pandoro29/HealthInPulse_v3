@@ -1,0 +1,12 @@
+.git
+.github
+.devcontainer
+Docs
+**/node_modules
+**/dist
+**/.env
+**/*.db
+**/*.db-journal
+**/logs
+backend/src/uploads/*/*
+!backend/src/uploads/*/.gitkeep

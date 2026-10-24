@@ -1,0 +1,92 @@
+name: CI
+
+# Garante que o projeto continua subindo numa máquina limpa,
+# nos três sistemas que o grupo usa.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  setup:
+    name: setup + smoke · ${{ matrix.os }} · Node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [20, 24]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: npm run setup
+        run: npm run setup
+
+      - name: Setup é idempotente (rodar de novo não quebra)
+        run: npm run setup
+
+      # Motor, base de conhecimento, exames, rastreamento e personas da
+      # feira (inclui o seed num SQLite temporário). Precisa do Prisma
+      # Client gerado pelo setup.
+      - name: Testes unitários (npm test)
+        run: npm test
+
+      - name: Build do frontend
+        run: npm run build
+
+      - name: Smoke test (backend real + frontend servido)
+        run: npm run smoke
+
+      # O comando do stand de ponta a ponta: gera o client, zera e popula o
+      # banco, builda, sobe em modo produção, confere /health, /teste, login
+      # da médica e a Base da IA editável, e encerra.
+      # O frontend já foi buildado no passo acima: --skip-build evita refazer
+      # o build (no Windows chega a estourar o timeout de 15 min).
+      - name: Stand (npm run stand -- --check)
+        run: npm run stand -- --check --skip-build
+
+      - name: Stand mantendo o banco (--keep-db)
+        run: npm run stand -- --keep-db --check --skip-build
+
+  docker:
+    name: imagem Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build
+        run: docker build -t healthinpulse:ci .
+
+      - name: Sobe o container (com o portão de senha, como no Render)
+        run: docker run -d --name app -p 3000:3000 -e DEMO_PASSWORD=senha-do-ci healthinpulse:ci
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Smoke test no container
+        run: node scripts/smoke.mjs --url=http://127.0.0.1:3000 --demo-password=senha-do-ci
+
+      - name: Logs do container
+        if: always()
+        run: docker logs app

@@ -1,0 +1,20 @@
+{
+  // Ambiente pronto no navegador (GitHub Codespaces) ou no VS Code com Docker.
+  // Nada para instalar na máquina: o setup roda sozinho na criação.
+  "name": "HealthInPulse",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bookworm",
+  "postCreateCommand": "npm run setup",
+  "forwardPorts": [5173, 3000],
+  "portsAttributes": {
+    "5173": { "label": "App (abra este)", "onAutoForward": "openBrowser" },
+    "3000": { "label": "API", "onAutoForward": "silent" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["Prisma.prisma", "bradlc.vscode-tailwindcss"]
+    },
+    "codespaces": {
+      "openFiles": ["README.md"]
+    }
+  }
+}
